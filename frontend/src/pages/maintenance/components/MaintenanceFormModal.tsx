@@ -54,7 +54,7 @@ export default function MaintenanceFormModal({ onClose }: Props) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content glass-panel animate-fade-in" style={{ maxWidth: '600px' }}>
+      <div className="modal-content glass-panel animate-fade-in" style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="modal-header">
           <h2>Nova Manutenção</h2>
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>

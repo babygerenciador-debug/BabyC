@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../services/api';
 import { Plus, Search, Edit2, Eye, Trash2 } from 'lucide-react';
 import VehicleFormModal from './VehicleFormModal';
@@ -13,6 +13,7 @@ interface VehicleDto {
 }
 
 export default function VehicleList() {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -87,7 +88,11 @@ export default function VehicleList() {
         )}
       </div>
 
-      {isModalOpen && <VehicleFormModal onClose={() => setIsModalOpen(false)} />}
+      {isModalOpen && <VehicleFormModal onClose={() => {
+        setIsModalOpen(false);
+        queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+        queryClient.invalidateQueries({ queryKey: ['vehicles-dropdown'] });
+      }} />}
     </div>
   );
 }

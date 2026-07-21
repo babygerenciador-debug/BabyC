@@ -49,4 +49,11 @@ public sealed class FinanceCategoriesController : BaseController
         var result = await Mediator.Send(command, cancellationToken);
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteCategory(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new DeleteFinancialCategoryCommand(id), cancellationToken);
+        return result.IsSuccess ? NoContent() : BadRequest(result.Error);
+    }
 }

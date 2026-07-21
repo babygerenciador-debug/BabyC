@@ -68,7 +68,7 @@ export default function VehicleFormModal({ onClose }: Props) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content glass-panel animate-fade-in">
+      <div className="modal-content glass-panel animate-fade-in" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="modal-header">
           <h2>Cadastrar Novo Veículo</h2>
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>

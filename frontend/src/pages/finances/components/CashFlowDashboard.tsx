@@ -120,7 +120,7 @@ export default function CashFlowDashboard() {
               </span>
               <h1 style={{ fontSize: '3rem', margin: '1rem 0' }}>{formatCurrency(data.netBalance)}</h1>
               <p style={{ opacity: 0.9 }}>
-                Fórmula: (Salário Líquido + Receitas) - Despesas
+                Fórmula: (Salário Bruto - 27% Imposto) - Despesas + Receitas
               </p>
             </div>
           </div>

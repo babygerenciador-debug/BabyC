@@ -1,3 +1,5 @@
+using MediatR;
+
 namespace FleetOS.Domain.Common;
 
 /// <summary>
@@ -28,7 +30,7 @@ public abstract class AggregateRoot : Entity
 }
 
 /// <summary>Marker interface for domain events.</summary>
-public interface IDomainEvent
+public interface IDomainEvent : INotification
 {
     Guid EventId { get; }
     DateTimeOffset OccurredAt { get; }

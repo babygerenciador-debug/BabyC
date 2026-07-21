@@ -9,6 +9,7 @@ public sealed record UpdateCostCenterCommand(Guid Id, string Name, string? Descr
 
 public sealed record CreateFinancialCategoryCommand(string Name, TransactionType Type) : IRequest<Result<Guid>>;
 public sealed record UpdateFinancialCategoryCommand(Guid Id, string Name) : IRequest<Result>;
+public sealed record DeleteFinancialCategoryCommand(Guid Id) : IRequest<Result>;
 
 public sealed record RegisterTransactionCommand(
     Guid CategoryId,
@@ -21,3 +22,4 @@ public sealed record RegisterTransactionCommand(
 
 public sealed record PayTransactionCommand(Guid Id, DateTime PaymentDate) : IRequest<Result>;
 public sealed record CancelTransactionCommand(Guid Id) : IRequest<Result>;
+public sealed record DeleteTransactionCommand(Guid Id) : IRequest<Result>;

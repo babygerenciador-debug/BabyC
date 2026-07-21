@@ -86,9 +86,11 @@ export default function TransactionFormModal({ onClose }: Props) {
             <div className="form-grid" style={{ gridTemplateColumns: '1fr' }}>
               
               <div className="input-group">
-                <label>Tipo</label>
-                <input type="text" value="Despesa (Saída)" disabled style={{ backgroundColor: 'var(--bg-primary)', cursor: 'not-allowed' }} />
-                <input type="hidden" {...register('type')} value="Expense" />
+                <label>Tipo *</label>
+                <select {...register('type')}>
+                  <option value="Expense">Despesa (Saída)</option>
+                  <option value="Revenue">Receita (Entrada)</option>
+                </select>
               </div>
 
               <div className="input-group">
@@ -111,7 +113,19 @@ export default function TransactionFormModal({ onClose }: Props) {
               </div>
 
               <div className="input-group">
-                <label>Categoria *</label>
+                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  Categoria *
+                  <button type="button" onClick={() => {
+                    const name = prompt('Nome da nova categoria:');
+                    if (name?.trim()) {
+                      api.post('/finance/categories', { name, type: selectedType }).then(() => {
+                        queryClient.invalidateQueries({ queryKey: ['finance-categories'] });
+                      });
+                    }
+                  }} style={{ color: 'var(--brand-color)', fontSize: '0.8rem', display: 'flex', alignItems: 'center' }}>
+                    + Nova
+                  </button>
+                </label>
                 <select {...register('categoryId')}>
                   <option value="">Selecione...</option>
                   {filteredCategories?.map((c: any) => (

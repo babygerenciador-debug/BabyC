@@ -9,4 +9,9 @@
   <ItemGroup>
     <ProjectReference Include="..\FleetOS.Shared\FleetOS.Shared.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="12.*" />
+    <PackageReference Include="MediatR.Contracts" Version="2.*" />
+  </ItemGroup>
 </Project>

@@ -123,6 +123,54 @@ internal sealed class PayTransactionCommandHandler : IRequestHandler<PayTransact
     }
 }
 
+internal sealed class DeleteFinancialCategoryCommandHandler : IRequestHandler<DeleteFinancialCategoryCommand, Result>
+{
+    private readonly IFinancialCategoryRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITenantContext _tenantContext;
+
+    public DeleteFinancialCategoryCommandHandler(IFinancialCategoryRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    {
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+        _tenantContext = tenantContext;
+    }
+
+    public async Task<Result> Handle(DeleteFinancialCategoryCommand request, CancellationToken cancellationToken)
+    {
+        var category = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        if (category is null) return Result.Failure(Error.NotFound("Category.NotFound", "Category not found."));
+
+        _repository.Remove(category);
+        await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+        return Result.Success();
+    }
+}
+
+internal sealed class DeleteTransactionCommandHandler : IRequestHandler<DeleteTransactionCommand, Result>
+{
+    private readonly IFinancialTransactionRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITenantContext _tenantContext;
+
+    public DeleteTransactionCommandHandler(IFinancialTransactionRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    {
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+        _tenantContext = tenantContext;
+    }
+
+    public async Task<Result> Handle(DeleteTransactionCommand request, CancellationToken cancellationToken)
+    {
+        var transaction = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        if (transaction is null) return Result.Failure(Error.NotFound("Transaction.NotFound", "Transaction not found."));
+
+        _repository.Remove(transaction);
+        await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+        return Result.Success();
+    }
+}
+
 internal sealed class CancelTransactionCommandHandler : IRequestHandler<CancelTransactionCommand, Result>
 {
     private readonly IFinancialTransactionRepository _repository;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../services/api';
-import { Plus, CheckCircle, XCircle, Filter } from 'lucide-react';
+import { Plus, CheckCircle, XCircle, Filter, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import TransactionFormModal from './TransactionFormModal';
 
@@ -40,6 +40,15 @@ export default function TransactionsList() {
 
   const cancelMutation = useMutation({
     mutationFn: (id: string) => api.patch(`/finance/transactions/${id}/cancel`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['cash-flow-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/finance/transactions/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['cash-flow-summary'] });
@@ -126,6 +135,16 @@ export default function TransactionsList() {
                           </button>
                         </>
                       )}
+                      <button 
+                        className="btn-icon" 
+                        style={{ color: 'var(--error)' }} 
+                        title="Excluir"
+                        onClick={() => {
+                          if(window.confirm('Excluir permanentemente esta transação?')) deleteMutation.mutate(tx.id);
+                        }}
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
                   </td>
                 </tr>
