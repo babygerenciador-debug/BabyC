@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../services/api';
 import { Plus, Search, Edit2, Eye, Trash2 } from 'lucide-react';
 import VehicleFormModal from './VehicleFormModal';
@@ -22,6 +22,14 @@ export default function VehicleList() {
     queryFn: async () => {
       const res = await api.get('/vehicles', { params: { searchTerm } });
       return res.data;
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/vehicles/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      queryClient.invalidateQueries({ queryKey: ['vehicles-dropdown'] });
     }
   });
 
@@ -69,9 +77,9 @@ export default function VehicleList() {
                   <td>{vehicle.capacity || 'N/A'}</td>
                   <td style={{ textAlign: 'right' }}>
                     <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
-                      <button className="btn-icon"><Eye size={18} /></button>
-                      <button className="btn-icon"><Edit2 size={18} /></button>
-                      <button className="btn-icon" style={{ color: 'var(--error)' }}><Trash2 size={18} /></button>
+                      <button className="btn-icon" title="Visualizar" onClick={() => alert(`Veículo: ${vehicle.licensePlate} - ${vehicle.nickname}`)}><Eye size={18} /></button>
+                      <button className="btn-icon" title="Editar" onClick={() => alert('Edição não implementada.')}><Edit2 size={18} /></button>
+                      <button className="btn-icon" style={{ color: 'var(--error)' }} title="Excluir" onClick={() => { if (window.confirm(`Excluir veículo ${vehicle.licensePlate}?`)) deleteMutation.mutate(vehicle.id); }}><Trash2 size={18} /></button>
                     </div>
                   </td>
                 </tr>

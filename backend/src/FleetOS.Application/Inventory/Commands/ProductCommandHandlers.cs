@@ -38,6 +38,54 @@ internal sealed class CreateProductCategoryCommandHandler : IRequestHandler<Crea
     }
 }
 
+internal sealed class DeleteProductCategoryCommandHandler : IRequestHandler<DeleteProductCategoryCommand, Result>
+{
+    private readonly IProductCategoryRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITenantContext _tenantContext;
+
+    public DeleteProductCategoryCommandHandler(IProductCategoryRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    {
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+        _tenantContext = tenantContext;
+    }
+
+    public async Task<Result> Handle(DeleteProductCategoryCommand request, CancellationToken cancellationToken)
+    {
+        var category = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        if (category is null) return Result.Failure(Error.NotFound("Category.NotFound", "Category not found."));
+
+        _repository.Remove(category);
+        await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+        return Result.Success();
+    }
+}
+
+internal sealed class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommand, Result>
+{
+    private readonly IProductRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITenantContext _tenantContext;
+
+    public DeleteProductCommandHandler(IProductRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    {
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+        _tenantContext = tenantContext;
+    }
+
+    public async Task<Result> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
+    {
+        var product = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        if (product is null) return Result.Failure(Error.NotFound("Product.NotFound", "Product not found."));
+
+        _repository.Remove(product);
+        await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+        return Result.Success();
+    }
+}
+
 internal sealed class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, Result<Guid>>
 {
     private readonly IProductRepository _repository;

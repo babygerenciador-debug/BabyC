@@ -73,7 +73,7 @@ export default function FuelLogList() {
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
-                      <button className="btn-icon"><Eye size={18} /></button>
+                      <button className="btn-icon" title="Ver detalhes" onClick={() => alert(`Data: ${format(new Date(log.date), 'dd/MM/yyyy HH:mm')}\nVeículo: ${log.licensePlate || log.vehicleId}\nOdômetro: ${log.odometer} km\nLitros: ${log.liters} L\nCusto: R$ ${log.totalCost.toFixed(2)}`)}><Eye size={18} /></button>
                     </div>
                   </td>
                 </tr>

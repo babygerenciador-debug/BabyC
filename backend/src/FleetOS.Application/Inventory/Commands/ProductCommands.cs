@@ -7,6 +7,8 @@ public sealed record CreateProductCategoryCommand(string Name, string? Descripti
 
 public sealed record UpdateProductCategoryCommand(Guid Id, string Name, string? Description) : IRequest<Result>;
 
+public sealed record DeleteProductCategoryCommand(Guid Id) : IRequest<Result>;
+
 public sealed record CreateProductCommand(
     Guid CategoryId,
     string Name,
@@ -20,3 +22,5 @@ public sealed record UpdateProductCommand(
     string Name,
     string? SKU,
     string? Description) : IRequest<Result>;
+
+public sealed record DeleteProductCommand(Guid Id) : IRequest<Result>;

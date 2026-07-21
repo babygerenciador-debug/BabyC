@@ -76,7 +76,7 @@ export default function ProductsList() {
                   <td>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.averageUnitPrice)}</td>
                   <td style={{ textAlign: 'right' }}>
                     <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
-                      <button className="btn-icon"><Edit2 size={18} /></button>
+                      <button className="btn-icon" title="Editar" onClick={() => alert('Edição de produto não implementada.')}><Edit2 size={18} /></button>
                       <button 
                         className="btn-icon" 
                         style={{ color: 'var(--error)' }}

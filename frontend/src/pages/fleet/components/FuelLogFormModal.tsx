@@ -45,9 +45,9 @@ export default function FuelLogFormModal({ onClose }: Props) {
     mutationFn: (data: any) => api.post('/fuellogs', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fuellogs'] });
-      // Invalida também os veículos e dashboard pois o abastecimento pode mudar o status ou saldo
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['cash-flow-summary'] });
       onClose();
     }
   });

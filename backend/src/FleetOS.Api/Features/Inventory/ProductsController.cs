@@ -49,4 +49,11 @@ public sealed class ProductsController : BaseController
         var result = await Mediator.Send(command, cancellationToken);
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteProduct(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new DeleteProductCommand(id), cancellationToken);
+        return result.IsSuccess ? NoContent() : BadRequest(result.Error);
+    }
 }
