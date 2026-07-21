@@ -1,0 +1,28 @@
+namespace FleetOS.Application.Fleet.Vehicles;
+
+public record VehicleDto(
+    Guid     Id,
+    string   LicensePlate,
+    string?  Chassi,
+    string   Nickname,
+    string?  Brand,
+    string?  Color,
+    string?  Model,
+    int?     Capacity,
+    int?     Year,
+    string?  PhotoUrl,
+    string   Status,
+    Guid?    AssignedDriverId,
+    // Documentation
+    string?  Renavam,
+    string?  AnttNumber,
+    DateTime? AnttExpiry,
+    DateTime? ArtespExpiry,
+    DateTime? InsuranceExpiry,
+    DateTime? LicensingExpiry,
+    // Fuel
+    string?  FuelAlertMode,
+    int?     FuelAlertDays,
+    DateTimeOffset? LastFuelAt,
+    decimal? CurrentOdometerKm,
+    DateTimeOffset CreatedAt);

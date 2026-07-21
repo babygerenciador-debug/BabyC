@@ -1,0 +1,58 @@
+.inventory-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.inventory-header h1 {
+  margin-bottom: 0.25rem;
+  font-size: 1.8rem;
+}
+
+.inventory-header p {
+  color: var(--text-secondary);
+}
+
+.inventory-tabs {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1px;
+}
+
+/* Alert Row Animation for Stock */
+@keyframes pulse-red {
+  0% { background-color: rgba(239, 68, 68, 0.05); }
+  50% { background-color: rgba(239, 68, 68, 0.15); }
+  100% { background-color: rgba(239, 68, 68, 0.05); }
+}
+
+.row-alert {
+  animation: pulse-red 2s infinite ease-in-out;
+  border-left: 3px solid var(--error) !important;
+}
+
+.badge-alert {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-ok {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}

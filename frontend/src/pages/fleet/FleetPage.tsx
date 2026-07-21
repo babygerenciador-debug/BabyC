@@ -1,0 +1,44 @@
+import { useState } from 'react';
+import { Bus, Droplets } from 'lucide-react';
+import './FleetPage.css';
+import VehicleList from './components/VehicleList';
+import FuelLogList from './components/FuelLogList';
+
+type Tab = 'vehicles' | 'fuellogs';
+
+export default function FleetPage() {
+  const [activeTab, setActiveTab] = useState<Tab>('vehicles');
+
+  return (
+    <div className="fleet-container animate-fade-in">
+      <div className="fleet-header">
+        <div>
+          <h1>Frota</h1>
+          <p>Gerencie seus veículos, documentação e diário de abastecimento.</p>
+        </div>
+      </div>
+
+      <div className="fleet-tabs">
+        <button 
+          className={`tab-btn ${activeTab === 'vehicles' ? 'active' : ''}`}
+          onClick={() => setActiveTab('vehicles')}
+        >
+          <Bus size={18} />
+          <span>Veículos</span>
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'fuellogs' ? 'active' : ''}`}
+          onClick={() => setActiveTab('fuellogs')}
+        >
+          <Droplets size={18} />
+          <span>Abastecimentos</span>
+        </button>
+      </div>
+
+      <div className="tab-content">
+        {activeTab === 'vehicles' && <VehicleList />}
+        {activeTab === 'fuellogs' && <FuelLogList />}
+      </div>
+    </div>
+  );
+}

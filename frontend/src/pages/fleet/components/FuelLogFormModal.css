@@ -1,0 +1,38 @@
+.file-upload-area {
+  position: relative;
+  width: 100%;
+}
+
+.file-input {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+.file-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .file-label {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.file-label:hover {
+  background-color: var(--brand-light);
+  border-color: var(--brand-color);
+  color: var(--brand-color);
+}

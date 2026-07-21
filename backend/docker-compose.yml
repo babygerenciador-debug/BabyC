@@ -1,0 +1,58 @@
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fleetos_api
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+
+      ConnectionStrings__DefaultConnection: ${DATABASE_URL:-Host=db;Port=5432;Database=fleetos;Username=postgres;Password=postgres}
+
+      Jwt__Secret: "${JWT_SECRET}"
+      Jwt__Issuer: "${JWT_ISSUER:-fleetos-api}"
+      Jwt__Audience: "${JWT_AUDIENCE:-fleetos-clients}"
+      Jwt__AccessExpiryMinutes: "${JWT_ACCESS_EXPIRY_MINUTES:-60}"
+      Jwt__RefreshExpiryDays: "${JWT_REFRESH_EXPIRY_DAYS:-7}"
+
+      Redis__ConnectionString: "${REDIS_CONNECTIONSTRING:-redis:6379}"
+      Redis__Password: "${REDIS_PASSWORD}"
+
+    depends_on:
+      - db
+      - redis
+
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    container_name: fleetos_db
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fleetos
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: fleetos_redis
+
+    ports:
+      - "6379:6379"
+
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

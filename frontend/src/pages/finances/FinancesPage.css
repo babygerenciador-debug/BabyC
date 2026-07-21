@@ -1,0 +1,57 @@
+.finances-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.finances-header h1 {
+  margin-bottom: 0.25rem;
+  font-size: 1.8rem;
+}
+
+.finances-header p {
+  color: var(--text-secondary);
+}
+
+.finances-tabs {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1px;
+}
+
+/* Status Badges para Transações */
+.badge-status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.status-pending {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #f59e0b; /* amber */
+}
+
+.status-paid {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.status-cancelled {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+}
+
+.transaction-type-in {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.transaction-type-out {
+  color: var(--error);
+  font-weight: 600;
+}

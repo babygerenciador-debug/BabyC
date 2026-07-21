@@ -1,0 +1,44 @@
+using FleetOS.Application.Common.Interfaces;
+using FleetOS.Domain.Common.Interfaces;
+using FleetOS.Shared.Results;
+using MediatR;
+
+namespace FleetOS.Application.Operations.Trips.Commands;
+
+internal sealed class CompleteTripCommandHandler : IRequestHandler<CompleteTripCommand, Result>
+{
+    private readonly ITripRepository _tripRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
+
+    public CompleteTripCommandHandler(
+        ITripRepository tripRepository,
+        IUnitOfWork unitOfWork,
+        ITenantContext tenantContext,
+        IFleetNotificationService notificationService)
+    {
+        _tripRepository = tripRepository;
+        _unitOfWork = unitOfWork;
+        _tenantContext = tenantContext;
+        _notificationService = notificationService;
+    }
+
+    public async Task<Result> Handle(CompleteTripCommand request, CancellationToken cancellationToken)
+    {
+        var trip = await _tripRepository.GetByIdAsync(request.Id, cancellationToken);
+        if (trip is null)
+            return Result.Failure(Error.NotFound("Trip.NotFound", "Trip not found."));
+
+        var result = trip.CompleteTrip(request.ChecklistCompleted, request.ChecklistNotes);
+        if (result.IsFailure)
+            return result;
+
+        _tripRepository.Update(trip);
+        await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+
+        await _notificationService.NotifyTripUpdatedAsync(trip.Id, cancellationToken);
+
+        return Result.Success();
+    }
+}
