@@ -10,15 +10,18 @@ internal sealed class DeleteMaintenanceCommandHandler : IRequestHandler<DeleteMa
     private readonly IMaintenanceRepository _maintenanceRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
 
     public DeleteMaintenanceCommandHandler(
         IMaintenanceRepository maintenanceRepository,
         IUnitOfWork unitOfWork,
-        ITenantContext tenantContext)
+        ITenantContext tenantContext,
+        IFleetNotificationService notificationService)
     {
         _maintenanceRepository = maintenanceRepository;
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
+        _notificationService = notificationService;
     }
 
     public async Task<Result> Handle(DeleteMaintenanceCommand request, CancellationToken cancellationToken)
@@ -31,6 +34,8 @@ internal sealed class DeleteMaintenanceCommandHandler : IRequestHandler<DeleteMa
         
         _maintenanceRepository.Remove(record);
         await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+
+        await _notificationService.NotifyMaintenanceUpdatedAsync(request.Id, cancellationToken);
 
         return Result.Success();
     }

@@ -11,12 +11,14 @@ internal sealed class CreateProductCategoryCommandHandler : IRequestHandler<Crea
     private readonly IProductCategoryRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
 
-    public CreateProductCategoryCommandHandler(IProductCategoryRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    public CreateProductCategoryCommandHandler(IProductCategoryRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext, IFleetNotificationService notificationService)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
+        _notificationService = notificationService;
     }
 
     public async Task<Result<Guid>> Handle(CreateProductCategoryCommand request, CancellationToken cancellationToken)
@@ -34,6 +36,8 @@ internal sealed class CreateProductCategoryCommandHandler : IRequestHandler<Crea
         await _repository.AddAsync(categoryResult.Value!, cancellationToken);
         await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
 
+        await _notificationService.NotifyStockUpdatedAsync(cancellationToken);
+
         return Result.Success(categoryResult.Value!.Id);
     }
 }
@@ -43,12 +47,14 @@ internal sealed class DeleteProductCategoryCommandHandler : IRequestHandler<Dele
     private readonly IProductCategoryRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
 
-    public DeleteProductCategoryCommandHandler(IProductCategoryRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    public DeleteProductCategoryCommandHandler(IProductCategoryRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext, IFleetNotificationService notificationService)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
+        _notificationService = notificationService;
     }
 
     public async Task<Result> Handle(DeleteProductCategoryCommand request, CancellationToken cancellationToken)
@@ -58,6 +64,9 @@ internal sealed class DeleteProductCategoryCommandHandler : IRequestHandler<Dele
 
         _repository.Remove(category);
         await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+
+        await _notificationService.NotifyStockUpdatedAsync(cancellationToken);
+
         return Result.Success();
     }
 }
@@ -67,12 +76,14 @@ internal sealed class DeleteProductCommandHandler : IRequestHandler<DeleteProduc
     private readonly IProductRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
 
-    public DeleteProductCommandHandler(IProductRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    public DeleteProductCommandHandler(IProductRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext, IFleetNotificationService notificationService)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
+        _notificationService = notificationService;
     }
 
     public async Task<Result> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
@@ -82,6 +93,9 @@ internal sealed class DeleteProductCommandHandler : IRequestHandler<DeleteProduc
 
         _repository.Remove(product);
         await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+
+        await _notificationService.NotifyStockUpdatedAsync(cancellationToken);
+
         return Result.Success();
     }
 }
@@ -90,15 +104,19 @@ internal sealed class CreateProductCommandHandler : IRequestHandler<CreateProduc
 {
     private readonly IProductRepository _repository;
     private readonly IProductCategoryRepository _categoryRepository;
+    private readonly IStockBalanceRepository _stockRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
 
-    public CreateProductCommandHandler(IProductRepository repository, IProductCategoryRepository categoryRepository, IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    public CreateProductCommandHandler(IProductRepository repository, IProductCategoryRepository categoryRepository, IStockBalanceRepository stockRepository, IUnitOfWork unitOfWork, ITenantContext tenantContext, IFleetNotificationService notificationService)
     {
         _repository = repository;
         _categoryRepository = categoryRepository;
+        _stockRepository = stockRepository;
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
+        _notificationService = notificationService;
     }
 
     public async Task<Result<Guid>> Handle(CreateProductCommand request, CancellationToken cancellationToken)
@@ -120,9 +138,29 @@ internal sealed class CreateProductCommandHandler : IRequestHandler<CreateProduc
         if (productResult.IsFailure)
             return Result.Failure<Guid>(productResult.Error);
 
-        await _repository.AddAsync(productResult.Value!, cancellationToken);
+        var product = productResult.Value!;
+        await _repository.AddAsync(product, cancellationToken);
+
+        if (request.InitialQuantity.HasValue && request.InitialQuantity.Value > 0)
+        {
+            var stockResult = StockBalance.Create(
+                _tenantContext.TenantId,
+                _tenantContext.OrganizationId,
+                _tenantContext.BusinessUnitId,
+                product.Id,
+                LocationType.Main,
+                null,
+                request.InitialQuantity.Value,
+                0);
+
+            if (stockResult.IsSuccess)
+                await _stockRepository.AddAsync(stockResult.Value!, cancellationToken);
+        }
+
         await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
 
-        return Result.Success(productResult.Value!.Id);
+        await _notificationService.NotifyStockUpdatedAsync(cancellationToken);
+
+        return Result.Success(product.Id);
     }
 }

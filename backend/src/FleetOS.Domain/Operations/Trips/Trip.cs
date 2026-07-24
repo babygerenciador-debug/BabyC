@@ -162,4 +162,9 @@ public sealed class Trip : AggregateRoot
 
         return Result.Success();
     }
+
+    public void Delete()
+    {
+        SoftDelete(Guid.Empty);
+    }
 }

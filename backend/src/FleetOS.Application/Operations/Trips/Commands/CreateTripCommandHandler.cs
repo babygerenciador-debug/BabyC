@@ -70,11 +70,25 @@ internal sealed class CreateTripCommandHandler : IRequestHandler<CreateTripComma
         // Se a viagem já foi paga, criar transação financeira automaticamente
         if (request.PaymentStatus == PaymentStatus.Paid && request.TripValue > 0)
         {
-            // Buscar ou criar categoria "Viagens" (Revenue)
             var categories = await _categoryRepository.GetAllAsync(cancellationToken);
             var revenueCategory = categories.FirstOrDefault(c => c.Type == TransactionType.Revenue && c.Name.ToLower().Contains("viagem"));
-            
-            if (revenueCategory != null)
+
+            if (revenueCategory is null)
+            {
+                var catResult = FinancialCategory.Create(
+                    _tenantContext.TenantId,
+                    _tenantContext.OrganizationId,
+                    _tenantContext.BusinessUnitId,
+                    "Viagens",
+                    TransactionType.Revenue);
+                if (catResult.IsSuccess && catResult.Value is not null)
+                {
+                    revenueCategory = catResult.Value;
+                    await _categoryRepository.AddAsync(revenueCategory, cancellationToken);
+                }
+            }
+
+            if (revenueCategory is not null)
             {
                 var transaction = FinancialTransaction.Create(
                     _tenantContext.TenantId,
@@ -84,13 +98,15 @@ internal sealed class CreateTripCommandHandler : IRequestHandler<CreateTripComma
                     null,
                     TransactionType.Revenue,
                     request.TripValue,
-                    DateTime.UtcNow,
+                    request.ScheduledEndDate,
                     $"Viagem: {request.Origin} → {request.Destination}",
                     result.Value!.Id);
 
                 if (transaction.IsSuccess)
                 {
-                    await _transactionRepository.AddAsync(transaction.Value!, cancellationToken);
+                    var tx = transaction.Value!;
+                    tx.Pay(request.ScheduledEndDate);
+                    await _transactionRepository.AddAsync(tx, cancellationToken);
                 }
             }
         }

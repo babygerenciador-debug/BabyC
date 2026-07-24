@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../services/api';
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import ProductFormModal from './ProductFormModal';
 
 interface ProductDto {
@@ -12,6 +13,7 @@ interface ProductDto {
   sku?: string;
   description?: string;
   averageUnitPrice: number;
+  availableQuantity: number;
 }
 
 export default function ProductsList() {
@@ -63,6 +65,7 @@ export default function ProductsList() {
                 <th>Nome / Peça</th>
                 <th>SKU</th>
                 <th>Categoria</th>
+                <th>Qtd.</th>
                 <th>Custo Médio (R$)</th>
                 <th style={{ textAlign: 'right' }}>Ações</th>
               </tr>
@@ -73,10 +76,11 @@ export default function ProductsList() {
                   <td style={{ fontWeight: 500 }}>{product.name}</td>
                   <td>{product.sku || '-'}</td>
                   <td><span className="status-badge" style={{ backgroundColor: 'var(--brand-light)', color: 'var(--brand-color)' }}>{product.categoryName}</span></td>
+                  <td style={{ fontWeight: 600 }}>{product.availableQuantity}</td>
                   <td>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.averageUnitPrice)}</td>
                   <td style={{ textAlign: 'right' }}>
                     <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
-                      <button className="btn-icon" title="Editar" onClick={() => alert('Edição de produto não implementada.')}><Edit2 size={18} /></button>
+                      <button className="btn-icon" title="Editar" onClick={() => toast.info('Edição de produto disponível em breve.')}><Edit2 size={18} /></button>
                       <button 
                         className="btn-icon" 
                         style={{ color: 'var(--error)' }}
@@ -92,7 +96,7 @@ export default function ProductsList() {
               ))}
               {!data?.items?.length && (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>
                     Nenhum produto encontrado.
                   </td>
                 </tr>

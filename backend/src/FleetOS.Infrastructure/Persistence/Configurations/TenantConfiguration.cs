@@ -22,6 +22,7 @@ public sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         builder.Property(t => t.PrimaryColor).HasMaxLength(10);
         builder.Property(t => t.TimeZone).IsRequired().HasMaxLength(50);
         builder.Property(t => t.Language).IsRequired().HasMaxLength(10);
+        builder.Property(t => t.OwnerSalary).HasDefaultValue(0).HasColumnType("decimal(18,2)");
 
         builder.HasMany(t => t.Organizations)
                .WithOne()

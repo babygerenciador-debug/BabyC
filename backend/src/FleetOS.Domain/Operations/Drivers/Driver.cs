@@ -26,7 +26,7 @@ public sealed class Driver : AggregateRoot
         UserId            = userId;
         CnhNumber         = cnhNumber;
         CnhCategory       = cnhCategory;
-        CnhExpirationDate = cnhExpirationDate.Date;
+        CnhExpirationDate = DateTime.SpecifyKind(cnhExpirationDate.Date, DateTimeKind.Utc);
         Status            = DriverStatus.Active;
         IsAvailable       = true;
         CreatedAt         = DateTimeOffset.UtcNow;
@@ -90,7 +90,7 @@ public sealed class Driver : AggregateRoot
 
         CnhNumber         = cnhNumber;
         CnhCategory       = cnhCategory;
-        CnhExpirationDate = cnhExpirationDate.Date;
+        CnhExpirationDate = DateTime.SpecifyKind(cnhExpirationDate.Date, DateTimeKind.Utc);
         UpdatedAt         = DateTimeOffset.UtcNow;
 
         return Result.Success();
@@ -109,6 +109,12 @@ public sealed class Driver : AggregateRoot
     {
         Status    = status;
         UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void SetAvailability(bool available)
+    {
+        IsAvailable = available;
+        UpdatedAt   = DateTimeOffset.UtcNow;
     }
 
 

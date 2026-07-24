@@ -20,5 +20,4 @@ public sealed record GetTransactionsQuery(
 
 public sealed record GetCashFlowSummaryQuery(
     DateTime? StartDate,
-    DateTime? EndDate,
-    decimal OwnerSalary) : IRequest<Result<CashFlowSummaryDto>>;
+    DateTime? EndDate) : IRequest<Result<CashFlowSummaryDto>>;

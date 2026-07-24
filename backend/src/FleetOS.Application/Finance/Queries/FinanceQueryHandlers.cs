@@ -1,4 +1,6 @@
 using FleetOS.Application.Common.Interfaces;
+using FleetOS.Domain.Common.Interfaces;
+using FleetOS.Domain.Core.Tenants;
 using FleetOS.Shared.Pagination;
 using FleetOS.Shared.Results;
 using MediatR;
@@ -96,15 +98,25 @@ internal sealed class GetTransactionsQueryHandler : IRequestHandler<GetTransacti
 internal sealed class GetCashFlowSummaryQueryHandler : IRequestHandler<GetCashFlowSummaryQuery, Result<CashFlowSummaryDto>>
 {
     private readonly IFinancialTransactionRepository _repository;
+    private readonly ITenantContext _tenantContext;
+    private readonly ITenantRepository _tenantRepository;
 
-    public GetCashFlowSummaryQueryHandler(IFinancialTransactionRepository repository)
+    public GetCashFlowSummaryQueryHandler(
+        IFinancialTransactionRepository repository,
+        ITenantContext tenantContext,
+        ITenantRepository tenantRepository)
     {
         _repository = repository;
+        _tenantContext = tenantContext;
+        _tenantRepository = tenantRepository;
     }
 
     public async Task<Result<CashFlowSummaryDto>> Handle(GetCashFlowSummaryQuery request, CancellationToken cancellationToken)
     {
-        var result = await _repository.GetCashFlowSummaryAsync(request.StartDate, request.EndDate, request.OwnerSalary, cancellationToken);
+        var tenant = await _tenantRepository.GetByIdAsync(_tenantContext.TenantId, cancellationToken);
+        var ownerSalary = tenant?.OwnerSalary ?? 0;
+
+        var result = await _repository.GetCashFlowSummaryAsync(request.StartDate, request.EndDate, ownerSalary, cancellationToken);
         return Result.Success(result);
     }
 }

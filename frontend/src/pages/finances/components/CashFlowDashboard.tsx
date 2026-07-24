@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { api } from '../../../services/api';
-import { DollarSign, TrendingUp, TrendingDown, Landmark, Save, Wallet } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Landmark, Save, Wallet, Loader2 } from 'lucide-react';
 import './CashFlowDashboard.css';
 
 interface CashFlowSummaryDto {
@@ -13,35 +14,57 @@ interface CashFlowSummaryDto {
   netBalance: number;
 }
 
-export default function CashFlowDashboard() {
-  const [ownerSalaryInput, setOwnerSalaryInput] = useState<string>('');
-  const [activeSalary, setActiveSalary] = useState<number>(0);
+interface FinanceSettingsDto {
+  ownerSalary: number;
+}
 
-  // Load from LocalStorage on mount
+export default function CashFlowDashboard() {
+  const queryClient = useQueryClient();
+
+  const { data: settings } = useQuery<FinanceSettingsDto>({
+    queryKey: ['finance-settings'],
+    queryFn: async () => {
+      const res = await api.get('/finance/settings');
+      return res.data;
+    },
+  });
+
+  const [ownerSalaryInput, setOwnerSalaryInput] = useState<string>('');
+
   useEffect(() => {
-    const saved = localStorage.getItem('@fleetos:ownerSalary');
-    if (saved) {
-      setOwnerSalaryInput(saved);
-      setActiveSalary(Number(saved));
+    if (settings && ownerSalaryInput === '' && settings.ownerSalary > 0) {
+      setOwnerSalaryInput(settings.ownerSalary.toString());
     }
-  }, []);
+  }, [settings, ownerSalaryInput]);
+
+  const updateSettings = useMutation({
+    mutationFn: (ownerSalary: number) =>
+      api.put('/finance/settings', { ownerSalary }),
+    onSuccess: () => {
+      toast.success('Salário atualizado com sucesso');
+      queryClient.invalidateQueries({ queryKey: ['finance-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['cash-flow-summary'] });
+    },
+    onError: () => {
+      toast.error('Erro ao atualizar salário');
+    },
+  });
 
   const handleSaveSalary = () => {
     const num = Number(ownerSalaryInput);
     if (!isNaN(num) && num >= 0) {
-      localStorage.setItem('@fleetos:ownerSalary', num.toString());
-      setActiveSalary(num);
+      updateSettings.mutate(num);
     }
   };
 
   const { data, isLoading } = useQuery<CashFlowSummaryDto>({
-    queryKey: ['cash-flow-summary', activeSalary],
+    queryKey: ['cash-flow-summary'],
     queryFn: async () => {
-      const res = await api.get('/finance/transactions/summary', { 
-        params: { ownerSalary: activeSalary } 
-      });
+      const res = await api.get('/finance/transactions/summary');
       return res.data;
-    }
+    },
+    refetchInterval: 30000,
+    enabled: !!settings,
   });
 
   const formatCurrency = (val: number) => {
@@ -66,8 +89,9 @@ export default function CashFlowDashboard() {
               onChange={(e) => setOwnerSalaryInput(e.target.value)}
             />
           </div>
-          <button className="btn-primary" onClick={handleSaveSalary}>
-            <Save size={18} /> Aplicar e Calcular
+          <button className="btn-primary" onClick={handleSaveSalary} disabled={updateSettings.isPending}>
+            {updateSettings.isPending ? <Loader2 className="spinner" size={18} /> : <Save size={18} />}
+            {updateSettings.isPending ? 'Salvando...' : 'Aplicar e Calcular'}
           </button>
         </div>
       </div>

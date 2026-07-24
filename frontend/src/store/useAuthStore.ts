@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface User {
   id: string;
@@ -17,11 +17,13 @@ interface TenantTheme {
 
 interface AuthState {
   token: string | null;
+  refreshToken: string | null;
   user: User | null;
   theme: TenantTheme | null;
   
   // Actions
-  login: (token: string, user: User, theme?: TenantTheme) => void;
+  login: (token: string, refreshToken: string, user: User, theme?: TenantTheme) => void;
+  setTokens: (token: string, refreshToken: string) => void;
   logout: () => void;
   setTheme: (theme: TenantTheme) => void;
 }
@@ -30,21 +32,24 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       token: null,
+      refreshToken: null,
       user: null,
       theme: null,
       
-      login: (token, user, theme) => {
-        set({ token, user, theme });
+      login: (token, refreshToken, user, theme) => {
+        set({ token, refreshToken, user, theme });
         
-        // Aplica o tema dinâmico no login
         if (theme?.primaryColor) {
           applyTenantTheme(theme.primaryColor);
         }
       },
+
+      setTokens: (token, refreshToken) => {
+        set({ token, refreshToken });
+      },
       
       logout: () => {
-        set({ token: null, user: null, theme: null });
-        // Reseta o tema
+        set({ token: null, refreshToken: null, user: null, theme: null });
         document.documentElement.style.removeProperty('--brand-h');
         document.documentElement.style.removeProperty('--brand-s');
         document.documentElement.style.removeProperty('--brand-l');
@@ -58,7 +63,8 @@ export const useAuthStore = create<AuthState>()(
       }
     }),
     {
-      name: 'fleetos-auth-storage', // Key for localStorage
+      name: 'fleetos-auth-storage',
+      storage: createJSONStorage(() => sessionStorage),
     }
   )
 );

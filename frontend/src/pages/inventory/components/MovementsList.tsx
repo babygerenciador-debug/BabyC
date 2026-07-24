@@ -9,8 +9,10 @@ interface MovementDto {
   type: 'In' | 'Out' | 'Transfer';
   fromLocationType?: 'Central' | 'Vehicle';
   fromVehicleId?: string;
+  fromVehicleName?: string;
   toLocationType?: 'Central' | 'Vehicle';
   toVehicleId?: string;
+  toVehicleName?: string;
   quantity: number;
   date: string;
   notes?: string;
@@ -51,7 +53,7 @@ export default function MovementsList() {
           <select 
             value={selectedProductId} 
             onChange={(e) => setSelectedProductId(e.target.value)}
-            style={{ padding: '0.5rem', borderRadius: 'var(--border-radius-md)' }}
+            style={{ padding: '0.5rem', borderRadius: 'var(--radius-md)' }}
           >
             <option value="">-- Selecione uma Peça/Produto --</option>
             {products?.map((p: any) => (
@@ -88,8 +90,8 @@ export default function MovementsList() {
                   <td>{getMovementLabel(mov.type)}</td>
                   <td style={{ fontWeight: 500 }}>{mov.productName}</td>
                   <td style={{ fontWeight: 600 }}>{mov.quantity}</td>
-                  <td>{mov.fromLocationType === 'Central' ? 'Almoxarifado' : mov.fromVehicleId?.substring(0,8) || '-'}</td>
-                  <td>{mov.toLocationType === 'Central' ? 'Almoxarifado' : mov.toVehicleId?.substring(0,8) || '-'}</td>
+                  <td>{mov.fromLocationType === 'Central' ? 'Almoxarifado' : mov.fromVehicleName || mov.fromVehicleId?.substring(0,8) || '-'}</td>
+                  <td>{mov.toLocationType === 'Central' ? 'Almoxarifado' : mov.toVehicleName || mov.toVehicleId?.substring(0,8) || '-'}</td>
                   <td style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {mov.notes || '-'}
                   </td>

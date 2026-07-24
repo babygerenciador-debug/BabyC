@@ -13,6 +13,8 @@ public record VehicleDto(
     string?  PhotoUrl,
     string   Status,
     Guid?    AssignedDriverId,
+    string?  DriverName,
+    string?  DriverCpf,
     // Documentation
     string?  Renavam,
     string?  AnttNumber,

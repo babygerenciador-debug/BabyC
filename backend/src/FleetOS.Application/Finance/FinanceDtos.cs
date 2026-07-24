@@ -39,3 +39,6 @@ public sealed record CashFlowSummaryDto(
     decimal TotalRevenues,
     decimal TotalExpenses,
     decimal NetBalance);
+
+public sealed record FinanceSettingsDto(
+    decimal OwnerSalary);

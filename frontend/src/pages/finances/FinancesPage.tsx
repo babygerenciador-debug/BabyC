@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { LineChart, Receipt, Settings } from 'lucide-react';
+import { LineChart, Receipt, Settings, Droplets } from 'lucide-react';
 import './FinancesPage.css';
 import CashFlowDashboard from './components/CashFlowDashboard';
 import TransactionsList from './components/TransactionsList';
 import FinanceSettings from './components/FinanceSettings';
+import FuelReport from './components/FuelReport';
 
-type Tab = 'dashboard' | 'transactions' | 'settings';
+type Tab = 'dashboard' | 'transactions' | 'settings' | 'fuel';
 
 export default function FinancesPage() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -19,7 +20,7 @@ export default function FinancesPage() {
         </div>
       </div>
 
-      <div className="finances-tabs">
+      <div className="tabs">
         <button 
           className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
           onClick={() => setActiveTab('dashboard')}
@@ -41,12 +42,20 @@ export default function FinancesPage() {
           <Settings size={18} />
           <span>Centros de Custo e Categorias</span>
         </button>
+        <button 
+          className={`tab-btn ${activeTab === 'fuel' ? 'active' : ''}`}
+          onClick={() => setActiveTab('fuel')}
+        >
+          <Droplets size={18} />
+          <span>Relatório de Abastecimentos</span>
+        </button>
       </div>
 
       <div className="tab-content">
         {activeTab === 'dashboard' && <CashFlowDashboard />}
         {activeTab === 'transactions' && <TransactionsList />}
         {activeTab === 'settings' && <FinanceSettings />}
+        {activeTab === 'fuel' && <FuelReport />}
       </div>
     </div>
   );

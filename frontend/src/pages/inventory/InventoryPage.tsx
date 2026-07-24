@@ -19,7 +19,7 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      <div className="inventory-tabs">
+      <div className="tabs">
         <button 
           className={`tab-btn ${activeTab === 'stock' ? 'active' : ''}`}
           onClick={() => setActiveTab('stock')}

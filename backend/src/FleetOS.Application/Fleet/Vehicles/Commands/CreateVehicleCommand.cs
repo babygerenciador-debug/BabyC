@@ -7,6 +7,7 @@ public sealed record CreateVehicleCommand(
     string  LicensePlate,
     string  Nickname,
     string? DriverCpf,
+    Guid?   DriverId,
     string? Chassi,
     string? Brand,
     string? Color,

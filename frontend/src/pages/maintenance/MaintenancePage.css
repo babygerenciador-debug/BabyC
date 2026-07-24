@@ -1,14 +1,1 @@
-.page-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.page-header h1 {
-  margin-bottom: 0.25rem;
-  font-size: 1.8rem;
-}
-
-.page-header p {
-  color: var(--text-secondary);
-}
+/* Page-specific styles for MaintenancePage */

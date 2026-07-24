@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSignalR } from '../../hooks/useSignalR';
-import { Truck, Fuel, User } from 'lucide-react';
+import { Bus, Fuel, User, ClipboardCheck, AlertTriangle } from 'lucide-react';
 import TripsTab from './TripsTab';
 import FuelLogTab from './FuelLogTab';
 import ProfileTab from './ProfileTab';
+import ChecklistTab from './ChecklistTab';
+import IssuesTab from './IssuesTab';
 
-type Tab = 'trips' | 'fuel' | 'profile';
+type Tab = 'trips' | 'checklist' | 'fuel' | 'issues' | 'profile';
 
 export default function DriverPortalPage() {
   const user = useAuthStore((s) => s.user);
@@ -17,7 +19,7 @@ export default function DriverPortalPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--bg-primary)',
+      background: 'var(--bg-color)',
       display: 'flex',
       flexDirection: 'column',
       maxWidth: '600px',
@@ -25,14 +27,14 @@ export default function DriverPortalPage() {
     }}>
       {/* Header */}
       <header style={{
-        background: 'var(--card-bg)',
-        padding: '1rem',
+        background: 'var(--bg-card)',
+        padding: '1rem 1.25rem',
         borderBottom: '1px solid var(--border-color)',
         display: 'flex',
         alignItems: 'center',
         gap: '0.75rem'
       }}>
-        <Truck size={24} style={{ color: 'var(--brand-color)' }} />
+        <Bus size={24} style={{ color: 'var(--brand-color)' }} />
         <div>
           <h2 style={{ margin: 0, fontSize: '1.125rem' }}>Portal do Motorista</h2>
           <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
@@ -49,7 +51,9 @@ export default function DriverPortalPage() {
         paddingBottom: '5rem'
       }}>
         {activeTab === 'trips' && <TripsTab />}
+        {activeTab === 'checklist' && <ChecklistTab />}
         {activeTab === 'fuel' && <FuelLogTab />}
+        {activeTab === 'issues' && <IssuesTab />}
         {activeTab === 'profile' && <ProfileTab />}
       </main>
 
@@ -59,7 +63,7 @@ export default function DriverPortalPage() {
         bottom: 0,
         left: 0,
         right: 0,
-        background: 'var(--card-bg)',
+        background: 'var(--bg-card)',
         borderTop: '1px solid var(--border-color)',
         display: 'flex',
         justifyContent: 'space-around',
@@ -84,9 +88,31 @@ export default function DriverPortalPage() {
             transition: 'color 0.2s'
           }}
         >
-          <Truck size={24} />
+           <Bus size={24} />
           <span style={{ fontSize: '0.75rem', fontWeight: activeTab === 'trips' ? 600 : 400 }}>
             Viagens
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('checklist')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.25rem',
+            padding: '0.5rem',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            color: activeTab === 'checklist' ? 'var(--brand-color)' : 'var(--text-secondary)',
+            transition: 'color 0.2s'
+          }}
+        >
+          <ClipboardCheck size={24} />
+          <span style={{ fontSize: '0.75rem', fontWeight: activeTab === 'checklist' ? 600 : 400 }}>
+            Checklist
           </span>
         </button>
 
@@ -109,6 +135,28 @@ export default function DriverPortalPage() {
           <Fuel size={24} />
           <span style={{ fontSize: '0.75rem', fontWeight: activeTab === 'fuel' ? 600 : 400 }}>
             Abastecer
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('issues')}
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.25rem',
+            padding: '0.5rem',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            color: activeTab === 'issues' ? 'var(--warning)' : 'var(--text-secondary)',
+            transition: 'color 0.2s'
+          }}
+        >
+          <AlertTriangle size={24} />
+          <span style={{ fontSize: '0.75rem', fontWeight: activeTab === 'issues' ? 600 : 400 }}>
+            Alertas
           </span>
         </button>
 

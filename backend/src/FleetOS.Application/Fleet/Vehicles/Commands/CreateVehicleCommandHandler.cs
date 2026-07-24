@@ -4,6 +4,7 @@ using FleetOS.Domain.Core.Users;
 using FleetOS.Domain.Fleet.Vehicles;
 using FleetOS.Shared.Results;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -18,6 +19,7 @@ internal sealed class CreateVehicleCommandHandler
     private readonly IUnitOfWork        _unitOfWork;
     private readonly ITenantContext     _tenantContext;
     private readonly IFleetNotificationService _notificationService;
+    private readonly ILogger<CreateVehicleCommandHandler> _logger;
 
     public CreateVehicleCommandHandler(
         IVehicleRepository vehicleRepository,
@@ -25,7 +27,8 @@ internal sealed class CreateVehicleCommandHandler
         IDriverRepository  driverRepository,
         IUnitOfWork        unitOfWork,
         ITenantContext     tenantContext,
-        IFleetNotificationService notificationService)
+        IFleetNotificationService notificationService,
+        ILogger<CreateVehicleCommandHandler> logger)
     {
         _vehicleRepository = vehicleRepository;
         _userRepository    = userRepository;
@@ -33,12 +36,16 @@ internal sealed class CreateVehicleCommandHandler
         _unitOfWork        = unitOfWork;
         _tenantContext     = tenantContext;
         _notificationService = notificationService;
+        _logger = logger;
     }
 
     public async Task<Result<Guid>> Handle(
         CreateVehicleCommand request,
         CancellationToken    cancellationToken)
     {
+        _logger.LogInformation("CreateVehicle: Plate={Plate}, Nickname={Nick}, DriverCpf={Cpf}, DriverId={DriverId}",
+            request.LicensePlate, request.Nickname, request.DriverCpf, request.DriverId);
+
         // ── Uniqueness checks ──────────────────────────────────────────
         var existingByPlate = await _vehicleRepository.GetByLicensePlateAsync(
             request.LicensePlate, cancellationToken);
@@ -63,15 +70,15 @@ internal sealed class CreateVehicleCommandHandler
             _tenantContext.OrganizationId,
             _tenantContext.BusinessUnitId,
             request.LicensePlate,
-            request.Chassi,
+            NormalizeNull(request.Chassi),
             request.Nickname,
-            request.Brand,
-            request.Color,
-            request.Renavam,
-            request.AnttNumber,
+            NormalizeNull(request.Brand),
+            NormalizeNull(request.Color),
+            NormalizeNull(request.Renavam),
+            NormalizeNull(request.AnttNumber),
             request.Capacity,
             request.Year,
-            request.Model);
+            NormalizeNull(request.Model));
 
         if (vehicleResult.IsFailure)
             return Result.Failure<Guid>(vehicleResult.Error);
@@ -98,7 +105,15 @@ internal sealed class CreateVehicleCommandHandler
         }
 
         // ── Driver Assignment ──────────────────────────────────────────
-        if (!string.IsNullOrWhiteSpace(request.DriverCpf))
+        if (request.DriverId.HasValue)
+        {
+            var driver = await _driverRepository.GetByIdAsync(request.DriverId.Value, cancellationToken);
+            if (driver == null)
+                return Result.Failure<Guid>(Error.NotFound("Driver.NotFound", "Driver not found with the provided ID."));
+            vehicle.AssignDriver(driver.Id);
+            _logger.LogInformation("CreateVehicle: Assigned driver by ID={DriverId}", request.DriverId);
+        }
+        else if (!string.IsNullOrWhiteSpace(request.DriverCpf))
         {
             var cpfHash = HashCpf(request.DriverCpf);
             
@@ -111,15 +126,20 @@ internal sealed class CreateVehicleCommandHandler
                 return Result.Failure<Guid>(Error.NotFound("Driver.NotFound", "The user with the provided CPF is not a registered driver."));
 
             vehicle.AssignDriver(driver.Id);
+            _logger.LogInformation("CreateVehicle: Assigned driver by CPF, DriverId={DriverId}", driver.Id);
         }
 
         await _vehicleRepository.AddAsync(vehicle, cancellationToken);
-        await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+        var saved = await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+        _logger.LogInformation("CreateVehicle: Saved {Count} rows, VehicleId={VehicleId}", saved, vehicle.Id);
 
         await _notificationService.NotifyVehicleCreatedAsync(vehicle.Id, cancellationToken);
 
         return Result.Success(vehicle.Id);
     }
+
+    private static string? NormalizeNull(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static string HashCpf(string cpf)
     {

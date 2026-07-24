@@ -64,6 +64,10 @@ public sealed class FleetOsDbContext : DbContext, IUnitOfWork
     public DbSet<FleetOS.Domain.Common.Notifications.Notification> Notifications => Set<FleetOS.Domain.Common.Notifications.Notification>();
     public DbSet<FleetOS.Domain.Fleet.VehicleIssues.VehicleIssueReport> VehicleIssueReports => Set<FleetOS.Domain.Fleet.VehicleIssues.VehicleIssueReport>();
 
+    // Checklists
+    public DbSet<FleetOS.Domain.Operations.Checklists.ChecklistItem> ChecklistItems => Set<FleetOS.Domain.Operations.Checklists.ChecklistItem>();
+    public DbSet<FleetOS.Domain.Operations.Checklists.DailyChecklist> DailyChecklists => Set<FleetOS.Domain.Operations.Checklists.DailyChecklist>();
+
     // ─── Configuration ────────────────────────────────────────────────
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -131,6 +135,12 @@ public sealed class FleetOsDbContext : DbContext, IUnitOfWork
 
         modelBuilder.Entity<FleetOS.Domain.Fleet.VehicleIssues.VehicleIssueReport>()
             .HasQueryFilter(i => i.DeletedAt == null && i.TenantId == _currentTenantId);
+
+        modelBuilder.Entity<FleetOS.Domain.Operations.Checklists.ChecklistItem>()
+            .HasQueryFilter(c => c.DeletedAt == null && c.TenantId == _currentTenantId);
+
+        modelBuilder.Entity<FleetOS.Domain.Operations.Checklists.DailyChecklist>()
+            .HasQueryFilter(c => c.DeletedAt == null && c.TenantId == _currentTenantId);
 
         base.OnModelCreating(modelBuilder);
     }

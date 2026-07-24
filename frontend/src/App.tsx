@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
 import { queryClient } from './services/queryClient';
 import LoginPage from './pages/auth/LoginPage';
 import MainLayout from './components/layout/MainLayout';
@@ -13,12 +14,6 @@ import FinancesPage from './pages/finances/FinancesPage';
 import DriverPortalPage from './pages/driver/DriverPortalPage';
 import { useAuthStore } from './store/useAuthStore';
 import type { ReactNode } from 'react';
-
-function ProtectedRoute({ children }: { children: ReactNode }) {
-  const user = useAuthStore((s) => s.user);
-  if (!user) return <Navigate to="/login" replace />;
-  return <>{children}</>;
-}
 
 function AdminRoute({ children }: { children: ReactNode }) {
   const user = useAuthStore((s) => s.user);
@@ -38,6 +33,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <Toaster richColors position="top-right" />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<AdminRoute><MainLayout /></AdminRoute>}>

@@ -84,8 +84,8 @@ export default function TripsTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {trips.items.map((trip) => (
         <div key={trip.id} style={{
-          background: 'var(--card-bg)',
-          borderRadius: 'var(--border-radius)',
+          background: 'var(--bg-card)',
+          borderRadius: 'var(--radius-md)',
           padding: '1rem',
           boxShadow: 'var(--shadow-sm)'
         }}>
@@ -98,7 +98,7 @@ export default function TripsTab() {
               backgroundColor: statusColors[trip.status],
               color: 'white',
               padding: '0.25rem 0.75rem',
-              borderRadius: 'var(--border-radius-sm)',
+              borderRadius: 'var(--radius-sm)',
               fontSize: '0.875rem',
               fontWeight: 500
             }}>
@@ -128,8 +128,8 @@ export default function TripsTab() {
           {trip.notes && (
             <div style={{
               padding: '0.75rem',
-              background: 'var(--bg-primary)',
-              borderRadius: 'var(--border-radius-sm)',
+              background: 'var(--bg-color)',
+              borderRadius: 'var(--radius-sm)',
               marginBottom: '0.75rem',
               fontSize: '0.875rem',
               color: 'var(--text-secondary)'
@@ -148,7 +148,7 @@ export default function TripsTab() {
                 background: 'var(--success)',
                 color: 'white',
                 border: 'none',
-                borderRadius: 'var(--border-radius-sm)',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '1rem',
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -173,7 +173,7 @@ export default function TripsTab() {
                 style={{
                   width: '100%',
                   padding: '0.75rem',
-                  borderRadius: 'var(--border-radius-sm)',
+                  borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-color)',
                   fontFamily: 'inherit',
                   fontSize: '0.875rem',
@@ -190,7 +190,7 @@ export default function TripsTab() {
                   background: 'var(--brand-color)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: 'var(--border-radius-sm)',
+                  borderRadius: 'var(--radius-md)',
                   fontSize: '1rem',
                   fontWeight: 600,
                   cursor: 'pointer',

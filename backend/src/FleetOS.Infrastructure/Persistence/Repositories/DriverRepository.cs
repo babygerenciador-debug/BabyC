@@ -26,6 +26,8 @@ internal sealed class DriverRepository : BaseRepository<Driver>, IDriverReposito
     {
         var query = from d in DbSet
                     join u in DbContext.Users on d.UserId equals u.Id
+                    join v in DbContext.Vehicles on d.Id equals v.AssignedDriverId into vehicles
+                    from v in vehicles.DefaultIfEmpty()
                     where d.Id == id
                     select new DriverDto(
                         d.Id,
@@ -41,6 +43,7 @@ internal sealed class DriverRepository : BaseRepository<Driver>, IDriverReposito
                         d.Phone,
                         d.PhotoUrl,
                         d.IsAvailable,
+                        v != null ? v.LicensePlate + " - " + v.Nickname : null,
                         d.CreatedAt
                     );
 
@@ -52,7 +55,9 @@ internal sealed class DriverRepository : BaseRepository<Driver>, IDriverReposito
     {
         var query = from d in DbSet
                     join u in DbContext.Users on d.UserId equals u.Id
-                    select new { Driver = d, User = u };
+                    join v in DbContext.Vehicles on d.Id equals v.AssignedDriverId into vehicles
+                    from v in vehicles.DefaultIfEmpty()
+                    select new { Driver = d, User = u, Vehicle = v };
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -88,6 +93,7 @@ internal sealed class DriverRepository : BaseRepository<Driver>, IDriverReposito
                 x.Driver.Phone,
                 x.Driver.PhotoUrl,
                 x.Driver.IsAvailable,
+                x.Vehicle != null ? x.Vehicle.LicensePlate + " - " + x.Vehicle.Nickname : null,
                 x.Driver.CreatedAt
             ))
             .ToListAsync(cancellationToken);

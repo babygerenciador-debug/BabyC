@@ -2,6 +2,7 @@ using FleetOS.Application.Common.Interfaces;
 using FleetOS.Application.Finance;
 using FleetOS.Domain.Common.Interfaces;
 using FleetOS.Domain.Finance;
+using FleetOS.Domain.Fleet.Fuel;
 using FleetOS.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
 
@@ -126,13 +127,18 @@ internal sealed class FinancialTransactionRepository : IFinancialTransactionRepo
     public async Task<CashFlowSummaryDto> GetCashFlowSummaryAsync(DateTime? startDate, DateTime? endDate, decimal ownerSalary, CancellationToken cancellationToken = default)
     {
         var query = _dbContext.Set<FinancialTransaction>()
-            .Where(t => t.TenantId == _tenantContext.TenantId && t.Status != TransactionStatus.Cancelled); // ignore cancelled
+            .Where(t => t.TenantId == _tenantContext.TenantId && t.Status == TransactionStatus.Paid);
 
         if (startDate.HasValue) query = query.Where(t => t.Date >= startDate.Value);
         if (endDate.HasValue) query = query.Where(t => t.Date <= endDate.Value);
 
         var revenues = await query.Where(t => t.Type == TransactionType.Revenue).SumAsync(t => t.Amount, cancellationToken);
         var expenses = await query.Where(t => t.Type == TransactionType.Expense).SumAsync(t => t.Amount, cancellationToken);
+
+        var fuelExpenses = await _dbContext.Set<FuelLog>()
+            .Where(f => f.TenantId == _tenantContext.TenantId && (startDate == null || f.Date >= startDate) && (endDate == null || f.Date <= endDate))
+            .SumAsync(f => f.TotalCost, cancellationToken);
+        expenses += fuelExpenses;
 
         var ownerTaxAmount = ownerSalary * 0.27m; // 27% tax on owner salary
         var netOwnerSalary = ownerSalary - ownerTaxAmount;

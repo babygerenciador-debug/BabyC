@@ -1,8 +1,12 @@
 using FleetOS.Api.Controllers;
 using FleetOS.Application.Fleet.Fuel.Commands;
 using FleetOS.Application.Fleet.Vehicles.Queries;
+using FleetOS.Application.Operations.Checklists.Commands;
+using FleetOS.Application.Operations.Checklists.Queries;
+using FleetOS.Application.Operations.Drivers.Queries;
 using FleetOS.Application.Operations.Trips.Commands;
 using FleetOS.Application.Operations.Trips.Queries;
+using FleetOS.Application.VehicleIssues.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +17,13 @@ namespace FleetOS.Api.Features.Driver;
 [Route("api/v1/[controller]")]
 public sealed class DriverController : BaseController
 {
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMyProfile(CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new GetMyProfileQuery(), cancellationToken);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
     [HttpGet("trips")]
     public async Task<IActionResult> GetMyTrips(CancellationToken cancellationToken)
     {
@@ -51,6 +62,34 @@ public sealed class DriverController : BaseController
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
 
+    [HttpGet("checklist")]
+    public async Task<IActionResult> GetMyChecklist(
+        [FromQuery] Guid vehicleId,
+        CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new GetTodayChecklistQuery(vehicleId), cancellationToken);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
+    [HttpPost("checklist/complete")]
+    public async Task<IActionResult> CompleteChecklist(
+        [FromBody] CompleteDailyChecklistRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new CompleteDailyChecklistCommand(request.VehicleId, request.ChecklistItemIds);
+        var result = await Mediator.Send(command, cancellationToken);
+        return result.IsSuccess ? NoContent() : BadRequest(result.Error);
+    }
+
+    [HttpPost("issues")]
+    public async Task<IActionResult> ReportIssue(
+        [FromBody] ReportDriverIssueRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new ReportDriverIssueCommand(request.VehicleId, request.Description), cancellationToken);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+
     [HttpPost("trips/{id:guid}/complete")]
     public async Task<IActionResult> CompleteTrip(
         Guid id,
@@ -64,3 +103,7 @@ public sealed class DriverController : BaseController
 }
 
 public sealed record DriverCompleteTripRequest(bool ChecklistCompleted, string? ChecklistNotes);
+
+public sealed record CompleteDailyChecklistRequest(Guid VehicleId, IReadOnlyList<Guid> ChecklistItemIds);
+
+public sealed record ReportDriverIssueRequest(Guid VehicleId, string Description);

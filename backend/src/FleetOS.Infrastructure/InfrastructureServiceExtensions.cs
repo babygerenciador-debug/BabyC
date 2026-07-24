@@ -49,21 +49,34 @@ public static class InfrastructureServiceExtensions
         services.RegisterIdentityServices();
         services.RegisterInfrastructureServices();
 
-        // ── Redis ──────────────────────────────────────────────────────
-        var redisConnectionString = configuration["Redis:ConnectionString"]
-            ?? throw new InvalidOperationException("Redis:ConnectionString is not configured.");
-        var redisPassword = configuration["Redis:Password"];
-
-        var redisConfig = ConfigurationOptions.Parse(redisConnectionString);
-        if (!string.IsNullOrWhiteSpace(redisPassword))
-            redisConfig.Password = redisPassword;
-
-        services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConfig));
-        services.AddStackExchangeRedisCache(opts =>
+        // ── Redis (optional — falls back to in-memory cache) ───────────
+        var redisConnectionString = configuration["Redis:ConnectionString"];
+        if (!string.IsNullOrWhiteSpace(redisConnectionString))
         {
-            opts.ConfigurationOptions = redisConfig;
-            opts.InstanceName = "fleetos:";
-        });
+            try
+            {
+                var redisPassword = configuration["Redis:Password"];
+                var redisConfig = ConfigurationOptions.Parse(redisConnectionString);
+                if (!string.IsNullOrWhiteSpace(redisPassword))
+                    redisConfig.Password = redisPassword;
+
+                services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConfig));
+                services.AddStackExchangeRedisCache(opts =>
+                {
+                    opts.ConfigurationOptions = redisConfig;
+                    opts.InstanceName = "fleetos:";
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[FleetOS] Redis connection failed, falling back to in-memory cache: {ex.Message}");
+                services.AddDistributedMemoryCache();
+            }
+        }
+        else
+        {
+            services.AddDistributedMemoryCache();
+        }
         
         // ── Auth services ──────────────────────────────────────────────
         services.AddScoped<IPasswordService, BcryptPasswordService>();

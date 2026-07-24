@@ -8,7 +8,7 @@ interface StockBalanceDto {
   id: string;
   productId: string;
   productName: string;
-  locationType: 'Central' | 'Vehicle';
+  locationType: 'Main' | 'Vehicle';
   vehicleId?: string;
   vehicleLicensePlate?: string;
   quantity: number;
@@ -56,9 +56,9 @@ export default function StockBalanceList() {
             <select 
               value={selectedLocation} 
               onChange={(e) => setSelectedLocation(e.target.value)}
-              style={{ padding: '0.5rem', borderRadius: 'var(--border-radius-md)' }}
+              style={{ padding: '0.5rem', borderRadius: 'var(--radius-md)' }}
             >
-              <option value="main">Almoxarifado Central</option>
+              <option value="main">Estoque Geral</option>
               {vehicles?.map((v: any) => (
                 <option key={v.id} value={v.id}>Bagageiro: {v.licensePlate} - {v.nickname}</option>
               ))}
@@ -103,8 +103,8 @@ export default function StockBalanceList() {
                   <tr key={stock.id} className={isAlert ? 'row-alert' : ''}>
                     <td style={{ fontWeight: 500 }}>{stock.productName}</td>
                     <td>
-                      {stock.locationType === 'Central' 
-                        ? <span style={{ fontWeight: 600 }}>Almoxarifado Central</span>
+                      {stock.locationType === 'Main' 
+                        ? <span style={{ fontWeight: 600 }}>Estoque Geral</span>
                         : `Bagageiro: ${stock.vehicleLicensePlate || 'Desconhecido'}`
                       }
                     </td>

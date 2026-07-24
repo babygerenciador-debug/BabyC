@@ -28,35 +28,7 @@ internal sealed class GetDriverTripsQueryHandler : IRequestHandler<GetDriverTrip
         if (driver is null)
             return Result.Success(PagedResult<TripDto>.Create(new List<TripDto>(), 0, 1, 50));
 
-        var allTrips = await _tripRepository.GetAllAsync(cancellationToken);
-        var driverTrips = allTrips
-            .Where(t => t.DriverId == driver.Id)
-            .OrderByDescending(t => t.ScheduledStartDate)
-            .Take(50)
-            .ToList();
-
-        var dtos = driverTrips.Select(t => new TripDto(
-            t.Id,
-            t.DriverId,
-            string.Empty,
-            t.VehicleId,
-            string.Empty,
-            t.Origin,
-            t.Destination,
-            t.ScheduledStartDate,
-            t.ScheduledEndDate,
-            t.TripValue,
-            t.PaymentStatus.ToString(),
-            t.Notes,
-            t.ActualStartDate,
-            t.ActualEndDate,
-            t.ChecklistCompleted,
-            t.ChecklistNotes,
-            t.Status.ToString(),
-            t.CreatedAt,
-            t.UpdatedAt
-        )).ToList();
-
-        return Result.Success(PagedResult<TripDto>.Create(dtos, dtos.Count, 1, 50));
+        var trips = await _tripRepository.GetTripsByDriverIdAsync(driver.Id, cancellationToken: cancellationToken);
+        return Result.Success(PagedResult<TripDto>.Create(trips.ToList(), trips.Count, 1, 50));
     }
 }

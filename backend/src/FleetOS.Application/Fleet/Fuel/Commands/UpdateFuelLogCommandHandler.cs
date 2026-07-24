@@ -11,17 +11,20 @@ internal sealed class UpdateFuelLogCommandHandler : IRequestHandler<UpdateFuelLo
     private readonly IDriverRepository _driverRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
 
     public UpdateFuelLogCommandHandler(
         IFuelLogRepository fuelLogRepository,
         IDriverRepository driverRepository,
         IUnitOfWork unitOfWork,
-        ITenantContext tenantContext)
+        ITenantContext tenantContext,
+        IFleetNotificationService notificationService)
     {
         _fuelLogRepository = fuelLogRepository;
         _driverRepository = driverRepository;
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
+        _notificationService = notificationService;
     }
 
     public async Task<Result> Handle(UpdateFuelLogCommand request, CancellationToken cancellationToken)
@@ -49,11 +52,10 @@ internal sealed class UpdateFuelLogCommandHandler : IRequestHandler<UpdateFuelLo
         if (result.IsFailure)
             return result;
 
-        // Recalculate average consumption if necessary? For MVP, we'll keep it simple and just update the log.
-        // A full recalculation would involve finding the previous log again.
-        
         _fuelLogRepository.Update(fuelLog);
         await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+
+        await _notificationService.NotifyFuelLogCreatedAsync(request.Id, cancellationToken);
 
         return Result.Success();
     }

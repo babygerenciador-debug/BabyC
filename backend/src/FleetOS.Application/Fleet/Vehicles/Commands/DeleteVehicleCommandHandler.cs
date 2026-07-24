@@ -11,15 +11,18 @@ internal sealed class DeleteVehicleCommandHandler : IRequestHandler<DeleteVehicl
     private readonly IVehicleRepository _vehicleRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
 
     public DeleteVehicleCommandHandler(
         IVehicleRepository vehicleRepository,
         IUnitOfWork unitOfWork,
-        ITenantContext tenantContext)
+        ITenantContext tenantContext,
+        IFleetNotificationService notificationService)
     {
         _vehicleRepository = vehicleRepository;
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
+        _notificationService = notificationService;
     }
 
     public async Task<Result> Handle(DeleteVehicleCommand request, CancellationToken cancellationToken)
@@ -32,6 +35,8 @@ internal sealed class DeleteVehicleCommandHandler : IRequestHandler<DeleteVehicl
         
         _vehicleRepository.Remove(vehicle);
         await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+
+        await _notificationService.NotifyVehicleUpdatedAsync(request.Id, cancellationToken);
 
         return Result.Success();
     }

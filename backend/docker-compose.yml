@@ -5,15 +5,15 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: fleetos_api
+    env_file: ../.env
     ports:
-      - "8080:8080"
+      - "5000:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
 
       ConnectionStrings__DefaultConnection: ${DATABASE_URL:-Host=db;Port=5432;Database=fleetos;Username=postgres;Password=postgres}
 
-      Jwt__Secret: "${JWT_SECRET}"
       Jwt__Issuer: "${JWT_ISSUER:-fleetos-api}"
       Jwt__Audience: "${JWT_AUDIENCE:-fleetos-clients}"
       Jwt__AccessExpiryMinutes: "${JWT_ACCESS_EXPIRY_MINUTES:-60}"

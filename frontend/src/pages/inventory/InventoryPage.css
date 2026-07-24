@@ -5,22 +5,14 @@
 }
 
 .inventory-header h1 {
+  font-size: 1.75rem;
   margin-bottom: 0.25rem;
-  font-size: 1.8rem;
 }
 
 .inventory-header p {
   color: var(--text-secondary);
 }
 
-.inventory-tabs {
-  display: flex;
-  gap: 1rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 1px;
-}
-
-/* Alert Row Animation for Stock */
 @keyframes pulse-red {
   0% { background-color: rgba(239, 68, 68, 0.05); }
   50% { background-color: rgba(239, 68, 68, 0.15); }
@@ -35,7 +27,7 @@
 .badge-alert {
   background-color: rgba(239, 68, 68, 0.1);
   color: var(--error);
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -48,7 +40,7 @@
 .badge-ok {
   background-color: rgba(16, 185, 129, 0.1);
   color: var(--success);
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;

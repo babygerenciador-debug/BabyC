@@ -42,25 +42,31 @@ internal sealed class UpdateVehicleCommandHandler : IRequestHandler<UpdateVehicl
 
         var result = vehicle.Update(
             request.Nickname,
-            request.Chassi,
-            request.Brand,
-            request.Color,
-            request.Renavam,
-            request.AnttNumber,
+            NormalizeNull(request.Chassi),
+            NormalizeNull(request.Brand),
+            NormalizeNull(request.Color),
+            NormalizeNull(request.Renavam),
+            NormalizeNull(request.AnttNumber),
             request.Capacity,
             request.Year,
-            request.Model,
-            request.PhotoUrl);
+            NormalizeNull(request.Model),
+            NormalizeNull(request.PhotoUrl));
 
         if (result.IsFailure)
             return result;
 
         // ── Driver Assignment ──────────────────────────────────────────
-        if (request.DriverCpf != null)
+        if (request.DriverId.HasValue)
+        {
+            var driver = await _driverRepository.GetByIdAsync(request.DriverId.Value, cancellationToken);
+            if (driver == null)
+                return Result.Failure(Error.NotFound("Driver.NotFound", "Driver not found with the provided ID."));
+            vehicle.AssignDriver(driver.Id);
+        }
+        else if (request.DriverCpf != null)
         {
             if (string.IsNullOrWhiteSpace(request.DriverCpf))
             {
-                // Unlink driver if empty string passed
                 vehicle.ReleaseDriver();
             }
             else
@@ -86,6 +92,9 @@ internal sealed class UpdateVehicleCommandHandler : IRequestHandler<UpdateVehicl
 
         return Result.Success();
     }
+
+    private static string? NormalizeNull(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static string HashCpf(string cpf)
     {

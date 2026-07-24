@@ -11,16 +11,16 @@ namespace FleetOS.Application.Operations.Drivers.Commands;
 
 internal sealed class CreateDriverCommandHandler : IRequestHandler<CreateDriverCommand, Result<Guid>>
 {
-    private readonly IRepository<User> _userRepository;
-    private readonly IRepository<Driver> _driverRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IDriverRepository _driverRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
     private readonly IPasswordService _passwordService;
     private readonly IFleetNotificationService _notificationService;
 
     public CreateDriverCommandHandler(
-        IRepository<User> userRepository,
-        IRepository<Driver> driverRepository,
+        IUserRepository userRepository,
+        IDriverRepository driverRepository,
         IUnitOfWork unitOfWork,
         ITenantContext tenantContext,
         IPasswordService passwordService,
@@ -39,6 +39,31 @@ internal sealed class CreateDriverCommandHandler : IRequestHandler<CreateDriverC
         CancellationToken cancellationToken)
     {
         var cpfHash = HashCpf(request.Cpf);
+
+        var existingEmail = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
+        if (existingEmail is not null)
+        {
+            var existingDriver = await _driverRepository.GetByUserIdAsync(existingEmail.Id, cancellationToken);
+            if (existingDriver is not null && existingDriver.Status == DriverStatus.Active)
+                return Result.Failure<Guid>(Error.Validation("Driver.EmailAlreadyExists", "Este email já está em uso por outro motorista."));
+
+            if (existingDriver is not null)
+                _driverRepository.Remove(existingDriver);
+            _userRepository.Remove(existingEmail);
+        }
+
+        var existingCpf = await _userRepository.GetByCpfHashAsync(_tenantContext.TenantId, cpfHash, cancellationToken);
+        if (existingCpf is not null)
+        {
+            var existingDriver = await _driverRepository.GetByUserIdAsync(existingCpf.Id, cancellationToken);
+            if (existingDriver is not null && existingDriver.Status == DriverStatus.Active)
+                return Result.Failure<Guid>(Error.Validation("Driver.CpfAlreadyExists", "Este CPF já está cadastrado."));
+
+            if (existingDriver is not null)
+                _driverRepository.Remove(existingDriver);
+            _userRepository.Remove(existingCpf);
+        }
+
         var cpfLast4 = request.Cpf.Length >= 4 ? request.Cpf[^4..] : request.Cpf;
 
         var emailResult = FleetOS.Domain.Common.ValueObjects.Email.Create(request.Email);

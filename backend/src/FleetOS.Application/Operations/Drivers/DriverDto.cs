@@ -14,4 +14,5 @@ public record DriverDto(
     string?  Phone,
     string?  PhotoUrl,
     bool     IsAvailable,
+    string?  AssignedVehicle,
     DateTimeOffset CreatedAt);

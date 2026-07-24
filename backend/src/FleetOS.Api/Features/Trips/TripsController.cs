@@ -105,6 +105,17 @@ public sealed class TripsController : BaseController
         
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
+
+    [HttpDelete("{id:guid}/delete")]
+    public async Task<IActionResult> DeleteTrip(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var command = new DeleteTripCommand(id);
+        var result = await Mediator.Send(command, cancellationToken);
+        
+        return result.IsSuccess ? NoContent() : BadRequest(result.Error);
+    }
 }
 
 public sealed record CompleteTripRequest(bool ChecklistCompleted, string? ChecklistNotes);

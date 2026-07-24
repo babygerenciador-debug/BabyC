@@ -32,10 +32,10 @@ public sealed class VehicleIssuesController : BaseController
     [Authorize(Roles = "SystemAdmin,TenantAdmin,Manager")]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateIssueStatusRequest request, CancellationToken cancellationToken)
     {
-        var result = await Mediator.Send(new UpdateIssueStatusCommand(id, request.Status), cancellationToken);
+        var result = await Mediator.Send(new UpdateIssueStatusCommand(id, request.Status, request.ExpenseAmount, request.ExpenseDescription), cancellationToken);
         return result.IsSuccess ? Ok() : BadRequest(result.Error);
     }
 }
 
 public record ReportIssueRequest(Guid VehicleId, string Description);
-public record UpdateIssueStatusRequest(IssueStatus Status);
+public record UpdateIssueStatusRequest(IssueStatus Status, decimal? ExpenseAmount = null, string? ExpenseDescription = null);

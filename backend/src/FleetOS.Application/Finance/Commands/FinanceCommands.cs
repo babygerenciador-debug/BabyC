@@ -18,7 +18,8 @@ public sealed record RegisterTransactionCommand(
     decimal Amount,
     DateTime Date,
     string Description,
-    Guid? ReferenceId) : IRequest<Result<Guid>>;
+    Guid? ReferenceId,
+    TransactionStatus? Status = null) : IRequest<Result<Guid>>;
 
 public sealed record PayTransactionCommand(Guid Id, DateTime PaymentDate) : IRequest<Result>;
 public sealed record CancelTransactionCommand(Guid Id) : IRequest<Result>;

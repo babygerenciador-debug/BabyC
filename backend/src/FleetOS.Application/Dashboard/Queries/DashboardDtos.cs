@@ -10,5 +10,6 @@ public sealed record DashboardSummaryDto(
     int LowStockItemsCount,
     decimal MonthRevenues,
     decimal MonthExpenses,
-    decimal MonthBalance
+    decimal MonthBalance,
+    decimal MonthRealProfit
 );

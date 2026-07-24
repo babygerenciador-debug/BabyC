@@ -17,6 +17,7 @@ public sealed record ProductDto(
     string? SKU,
     string? Description,
     decimal AverageUnitPrice,
+    int AvailableQuantity,
     DateTimeOffset CreatedAt,
     DateTimeOffset? UpdatedAt);
 
@@ -40,8 +41,10 @@ public sealed record InventoryMovementDto(
     MovementType Type,
     LocationType? FromLocationType,
     Guid? FromVehicleId,
+    string? FromVehicleName,
     LocationType? ToLocationType,
     Guid? ToVehicleId,
+    string? ToVehicleName,
     int Quantity,
     DateTime Date,
     string? Notes,

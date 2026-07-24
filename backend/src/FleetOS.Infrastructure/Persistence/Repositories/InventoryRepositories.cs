@@ -1,6 +1,7 @@
 using FleetOS.Application.Common.Interfaces;
 using FleetOS.Application.Inventory;
 using FleetOS.Domain.Common.Interfaces;
+using FleetOS.Domain.Fleet.Vehicles;
 using FleetOS.Domain.Inventory;
 using FleetOS.Shared.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -66,8 +67,13 @@ internal sealed class ProductRepository : IProductRepository
     {
         return await _dbContext.Set<Product>()
             .Where(p => p.TenantId == _tenantContext.TenantId && p.Id == id)
-            .Join(_dbContext.Set<ProductCategory>(), p => p.CategoryId, c => c.Id, (p, c) => new ProductDto(
-                p.Id, p.CategoryId, c.Name, p.Name, p.SKU, p.Description, p.AverageUnitPrice, p.CreatedAt, p.UpdatedAt))
+            .Join(_dbContext.Set<ProductCategory>(), p => p.CategoryId, c => c.Id, (p, c) => new { p, c })
+            .Select(x => new ProductDto(
+                x.p.Id, x.p.CategoryId, x.c.Name, x.p.Name, x.p.SKU, x.p.Description, x.p.AverageUnitPrice,
+                _dbContext.Set<StockBalance>()
+                    .Where(s => s.ProductId == x.p.Id && s.LocationType == LocationType.Main)
+                    .Select(s => (int?)s.Quantity).Sum() ?? 0,
+                x.p.CreatedAt, x.p.UpdatedAt))
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -87,8 +93,13 @@ internal sealed class ProductRepository : IProductRepository
             .OrderBy(p => p.Name)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Join(_dbContext.Set<ProductCategory>(), p => p.CategoryId, c => c.Id, (p, c) => new ProductDto(
-                p.Id, p.CategoryId, c.Name, p.Name, p.SKU, p.Description, p.AverageUnitPrice, p.CreatedAt, p.UpdatedAt))
+            .Join(_dbContext.Set<ProductCategory>(), p => p.CategoryId, c => c.Id, (p, c) => new { p, c })
+            .Select(x => new ProductDto(
+                x.p.Id, x.p.CategoryId, x.c.Name, x.p.Name, x.p.SKU, x.p.Description, x.p.AverageUnitPrice,
+                _dbContext.Set<StockBalance>()
+                    .Where(s => s.ProductId == x.p.Id && s.LocationType == LocationType.Main)
+                    .Select(s => (int?)s.Quantity).Sum() ?? 0,
+                x.p.CreatedAt, x.p.UpdatedAt))
             .ToListAsync(cancellationToken);
 
         return PagedResult<ProductDto>.Create(items, totalCount, page, pageSize);
@@ -217,12 +228,20 @@ internal sealed class InventoryMovementRepository : IInventoryMovementRepository
 
         var totalCount = await query.CountAsync(cancellationToken);
 
+        var vehicles = _dbContext.Set<Vehicle>();
         var items = await query
             .OrderByDescending(m => m.Date)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Join(_dbContext.Set<Product>(), m => m.ProductId, p => p.Id, (m, p) => new InventoryMovementDto(
-                m.Id, m.ProductId, p.Name, m.Type, m.FromLocationType, m.FromVehicleId, m.ToLocationType, m.ToVehicleId, m.Quantity, m.Date, m.Notes, m.ReferenceId, m.CreatedAt))
+            .Join(_dbContext.Set<Product>(), m => m.ProductId, p => p.Id, (m, p) => new { m, p })
+            .GroupJoin(vehicles, x => x.m.FromVehicleId, v => v.Id, (x, fv) => new { x.m, x.p, fv })
+            .SelectMany(x => x.fv.DefaultIfEmpty(), (x, fv) => new { x.m, x.p, fv })
+            .GroupJoin(vehicles, x => x.m.ToVehicleId, v => v.Id, (x, tv) => new { x.m, x.p, x.fv, tv })
+            .SelectMany(x => x.tv.DefaultIfEmpty(), (x, tv) => new InventoryMovementDto(
+                x.m.Id, x.m.ProductId, x.p.Name, x.m.Type,
+                x.m.FromLocationType, x.m.FromVehicleId, x.fv != null ? x.fv.Nickname : null,
+                x.m.ToLocationType, x.m.ToVehicleId, tv != null ? tv.Nickname : null,
+                x.m.Quantity, x.m.Date, x.m.Notes, x.m.ReferenceId, x.m.CreatedAt))
             .ToListAsync(cancellationToken);
 
         return PagedResult<InventoryMovementDto>.Create(items, totalCount, page, pageSize);

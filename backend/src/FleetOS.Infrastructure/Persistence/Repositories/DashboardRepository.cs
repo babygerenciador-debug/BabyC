@@ -1,7 +1,9 @@
 using FleetOS.Application.Common.Interfaces;
 using FleetOS.Application.Dashboard.Queries;
 using FleetOS.Domain.Common.Interfaces;
+using FleetOS.Domain.Core.Tenants;
 using FleetOS.Domain.Finance;
+using FleetOS.Domain.Fleet.Fuel;
 using FleetOS.Domain.Fleet.Vehicles;
 using FleetOS.Domain.Inventory;
 using FleetOS.Domain.Operations.Trips;
@@ -36,14 +38,28 @@ internal sealed class DashboardRepository : IDashboardRepository
         var stockAlerts = await _dbContext.Set<StockBalance>().CountAsync(s => s.TenantId == tenantId && s.Quantity <= s.MinimumStockLevel, cancellationToken);
 
         var monthRevenues = await _dbContext.Set<FinancialTransaction>()
-            .Where(t => t.TenantId == tenantId && t.Status != TransactionStatus.Cancelled && t.Date >= startOfMonth && t.Type == TransactionType.Revenue)
+            .Where(t => t.TenantId == tenantId && t.Status == TransactionStatus.Paid && t.Date >= startOfMonth && t.Type == TransactionType.Revenue)
             .SumAsync(t => t.Amount, cancellationToken);
 
         var monthExpenses = await _dbContext.Set<FinancialTransaction>()
-            .Where(t => t.TenantId == tenantId && t.Status != TransactionStatus.Cancelled && t.Date >= startOfMonth && t.Type == TransactionType.Expense)
+            .Where(t => t.TenantId == tenantId && t.Status == TransactionStatus.Paid && t.Date >= startOfMonth && t.Type == TransactionType.Expense)
             .SumAsync(t => t.Amount, cancellationToken);
 
+        var fuelExpenses = await _dbContext.Set<FuelLog>()
+            .Where(f => f.TenantId == tenantId && f.Date >= startOfMonth)
+            .SumAsync(f => f.TotalCost, cancellationToken);
+
+        monthExpenses += fuelExpenses;
         var monthBalance = monthRevenues - monthExpenses;
+
+        var ownerSalary = await _dbContext.Set<Tenant>()
+            .Where(t => t.Id == tenantId)
+            .Select(t => t.OwnerSalary)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var ownerTaxRate = 0.27m;
+        var netOwnerSalary = ownerSalary * (1 - ownerTaxRate);
+        var monthRealProfit = netOwnerSalary + monthBalance;
 
         return new DashboardSummaryDto(
             totalVehicles,
@@ -55,7 +71,8 @@ internal sealed class DashboardRepository : IDashboardRepository
             stockAlerts,
             monthRevenues,
             monthExpenses,
-            monthBalance
+            monthBalance,
+            monthRealProfit
         );
     }
 }

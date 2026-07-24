@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../services/api';
-import { Plus, Search, Play, CheckCircle, XCircle, RefreshCw, DollarSign } from 'lucide-react';
+import { Plus, Search, Play, CheckCircle, XCircle, RefreshCw, DollarSign, Trash2 } from 'lucide-react';
 import TripFormModal from './TripFormModal';
 
 interface TripDto {
@@ -87,6 +87,15 @@ export default function TripList() {
     queryClient.invalidateQueries({ queryKey: ['trips'] });
     queryClient.invalidateQueries({ queryKey: ['transactions'] });
     queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+    queryClient.invalidateQueries({ queryKey: ['cash-flow-summary'] });
+  };
+
+  const handleDeleteTrip = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir permanentemente esta viagem?')) return;
+    await api.delete(`/trips/${id}/delete`);
+    queryClient.invalidateQueries({ queryKey: ['trips'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+    queryClient.invalidateQueries({ queryKey: ['cash-flow-summary'] });
   };
 
   const formatCurrency = (val: number) => {
@@ -117,7 +126,7 @@ export default function TripList() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ padding: '0.5rem', borderRadius: 'var(--border-radius-sm)' }}
+            style={{ padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}
           >
             <option value="">Todos os status</option>
                 <option value="Created">Agendado</option>
@@ -185,20 +194,25 @@ export default function TripList() {
                           <CheckCircle size={18} style={{ color: 'var(--brand-color)' }} />
                         </button>
                       )}
+                      {trip.paymentStatus === 'Pending' && trip.tripValue > 0 && (
+                        <button className="btn-icon" title="Marcar como Pago" onClick={() => handlePayTrip(trip.id)}>
+                          <DollarSign size={18} style={{ color: 'var(--success)' }} />
+                        </button>
+                      )}
+                      {trip.status === 'Created' && (
+                        <button className="btn-icon" title="Trocar Veículo" onClick={() => handleSwapVehicle(trip.id, trip.vehicleId)}>
+                          <RefreshCw size={18} style={{ color: 'var(--brand-color)' }} />
+                        </button>
+                      )}
                       {(trip.status === 'Created' || trip.status === 'InProgress') && (
-                        <>
-                          {trip.paymentStatus === 'Pending' && trip.tripValue > 0 && (
-                            <button className="btn-icon" title="Marcar como Pago" onClick={() => handlePayTrip(trip.id)}>
-                              <DollarSign size={18} style={{ color: 'var(--success)' }} />
-                            </button>
-                          )}
-                          <button className="btn-icon" title="Trocar Veículo" onClick={() => handleSwapVehicle(trip.id, trip.vehicleId)}>
-                            <RefreshCw size={18} style={{ color: 'var(--brand-color)' }} />
-                          </button>
-                          <button className="btn-icon" title="Cancelar Viagem" onClick={() => handleCancelTrip(trip.id)}>
-                            <XCircle size={18} style={{ color: 'var(--error)' }} />
-                          </button>
-                        </>
+                        <button className="btn-icon" title="Cancelar Viagem" onClick={() => handleCancelTrip(trip.id)}>
+                          <XCircle size={18} style={{ color: 'var(--error)' }} />
+                        </button>
+                      )}
+                      {(trip.status === 'Completed' || trip.status === 'Cancelled') && (
+                        <button className="btn-icon" title="Excluir Viagem" onClick={() => handleDeleteTrip(trip.id)}>
+                          <Trash2 size={18} style={{ color: 'var(--error)' }} />
+                        </button>
                       )}
                     </div>
                   </td>

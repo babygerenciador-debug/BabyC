@@ -11,12 +11,14 @@ internal sealed class CreateCostCenterCommandHandler : IRequestHandler<CreateCos
     private readonly ICostCenterRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
 
-    public CreateCostCenterCommandHandler(ICostCenterRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    public CreateCostCenterCommandHandler(ICostCenterRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext, IFleetNotificationService notificationService)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
+        _notificationService = notificationService;
     }
 
     public async Task<Result<Guid>> Handle(CreateCostCenterCommand request, CancellationToken cancellationToken)
@@ -26,6 +28,9 @@ internal sealed class CreateCostCenterCommandHandler : IRequestHandler<CreateCos
 
         await _repository.AddAsync(result.Value!, cancellationToken);
         await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+
+        await _notificationService.NotifyDashboardUpdateAsync(cancellationToken);
+
         return Result.Success(result.Value!.Id);
     }
 }
@@ -35,12 +40,14 @@ internal sealed class CreateFinancialCategoryCommandHandler : IRequestHandler<Cr
     private readonly IFinancialCategoryRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
 
-    public CreateFinancialCategoryCommandHandler(IFinancialCategoryRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    public CreateFinancialCategoryCommandHandler(IFinancialCategoryRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext, IFleetNotificationService notificationService)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
+        _notificationService = notificationService;
     }
 
     public async Task<Result<Guid>> Handle(CreateFinancialCategoryCommand request, CancellationToken cancellationToken)
@@ -50,6 +57,9 @@ internal sealed class CreateFinancialCategoryCommandHandler : IRequestHandler<Cr
 
         await _repository.AddAsync(result.Value!, cancellationToken);
         await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+
+        await _notificationService.NotifyDashboardUpdateAsync(cancellationToken);
+
         return Result.Success(result.Value!.Id);
     }
 }
@@ -82,12 +92,20 @@ internal sealed class RegisterTransactionCommandHandler : IRequestHandler<Regist
         var result = FinancialTransaction.Create(_tenantContext.TenantId, _tenantContext.OrganizationId, _tenantContext.BusinessUnitId, request.CategoryId, request.CostCenterId, request.Type, request.Amount, request.Date, request.Description, request.ReferenceId);
         if (result.IsFailure) return Result.Failure<Guid>(result.Error);
 
-        await _repository.AddAsync(result.Value!, cancellationToken);
+        var transaction = result.Value!;
+
+        if (request.Status == TransactionStatus.Paid)
+        {
+            var payResult = transaction.Pay(request.Date);
+            if (payResult.IsFailure) return Result.Failure<Guid>(payResult.Error);
+        }
+
+        await _repository.AddAsync(transaction, cancellationToken);
         await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
         
-        await _notificationService.NotifyTransactionCreatedAsync(result.Value!.Id, cancellationToken);
+        await _notificationService.NotifyTransactionCreatedAsync(transaction.Id, cancellationToken);
         
-        return Result.Success(result.Value!.Id);
+        return Result.Success(transaction.Id);
     }
 }
 
@@ -128,12 +146,14 @@ internal sealed class DeleteFinancialCategoryCommandHandler : IRequestHandler<De
     private readonly IFinancialCategoryRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
 
-    public DeleteFinancialCategoryCommandHandler(IFinancialCategoryRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    public DeleteFinancialCategoryCommandHandler(IFinancialCategoryRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext, IFleetNotificationService notificationService)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
+        _notificationService = notificationService;
     }
 
     public async Task<Result> Handle(DeleteFinancialCategoryCommand request, CancellationToken cancellationToken)
@@ -143,6 +163,9 @@ internal sealed class DeleteFinancialCategoryCommandHandler : IRequestHandler<De
 
         _repository.Remove(category);
         await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+
+        await _notificationService.NotifyDashboardUpdateAsync(cancellationToken);
+
         return Result.Success();
     }
 }
@@ -152,12 +175,14 @@ internal sealed class DeleteTransactionCommandHandler : IRequestHandler<DeleteTr
     private readonly IFinancialTransactionRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
 
-    public DeleteTransactionCommandHandler(IFinancialTransactionRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    public DeleteTransactionCommandHandler(IFinancialTransactionRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext, IFleetNotificationService notificationService)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
+        _notificationService = notificationService;
     }
 
     public async Task<Result> Handle(DeleteTransactionCommand request, CancellationToken cancellationToken)
@@ -167,6 +192,9 @@ internal sealed class DeleteTransactionCommandHandler : IRequestHandler<DeleteTr
 
         _repository.Remove(transaction);
         await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+
+        await _notificationService.NotifyTransactionUpdatedAsync(transaction.Id, cancellationToken);
+
         return Result.Success();
     }
 }

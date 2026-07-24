@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../services/api';
 import { Fuel, Save } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface VehicleDto {
   id: string;
@@ -16,13 +16,18 @@ export default function FuelLogTab() {
   const [liters, setLiters] = useState('');
   const [totalCost, setTotalCost] = useState('');
 
-  const { data: vehicles } = useQuery<{ items: VehicleDto[] }>({
+  const { data: vehicles } = useQuery<VehicleDto[]>({
     queryKey: ['my-vehicles'],
     queryFn: async () => {
       const res = await api.get('/driver/vehicles');
       return res.data;
     }
   });
+
+  useEffect(() => {
+    if (vehicles?.length === 1 && !vehicleId)
+      setVehicleId(vehicles[0].id);
+  }, [vehicles, vehicleId]);
 
   const mutation = useMutation({
     mutationFn: (data: { vehicleId: string; odometer: number; liters: number; totalCost: number }) => {
@@ -60,8 +65,8 @@ export default function FuelLogTab() {
   return (
     <div>
       <div style={{
-        background: 'var(--card-bg)',
-        borderRadius: 'var(--border-radius)',
+        background: 'var(--bg-card)',
+        borderRadius: 'var(--radius-md)',
         padding: '1.5rem',
         boxShadow: 'var(--shadow-sm)'
       }}>
@@ -81,13 +86,13 @@ export default function FuelLogTab() {
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                borderRadius: 'var(--border-radius-sm)',
+                borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border-color)',
                 fontSize: '1rem'
               }}
             >
               <option value="">Selecione...</option>
-              {vehicles?.items?.map((v) => (
+              {vehicles?.map((v) => (
                 <option key={v.id} value={v.id}>{v.licensePlate} - {v.nickname}</option>
               ))}
             </select>
@@ -105,7 +110,7 @@ export default function FuelLogTab() {
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                borderRadius: 'var(--border-radius-sm)',
+                borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border-color)',
                 fontSize: '1rem'
               }}
@@ -125,7 +130,7 @@ export default function FuelLogTab() {
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                borderRadius: 'var(--border-radius-sm)',
+                borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border-color)',
                 fontSize: '1rem'
               }}
@@ -145,7 +150,7 @@ export default function FuelLogTab() {
               style={{
                 width: '100%',
                 padding: '0.75rem',
-                borderRadius: 'var(--border-radius-sm)',
+                borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--border-color)',
                 fontSize: '1rem'
               }}
@@ -161,7 +166,7 @@ export default function FuelLogTab() {
               background: 'var(--brand-color)',
               color: 'white',
               border: 'none',
-              borderRadius: 'var(--border-radius-sm)',
+              borderRadius: 'var(--radius-md)',
               fontSize: '1rem',
               fontWeight: 600,
               cursor: 'pointer',

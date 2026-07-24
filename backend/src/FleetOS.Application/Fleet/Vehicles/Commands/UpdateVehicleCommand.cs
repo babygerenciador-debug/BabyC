@@ -7,6 +7,7 @@ public sealed record UpdateVehicleCommand(
     Guid    Id,
     string  Nickname,
     string? DriverCpf,
+    Guid?   DriverId,
     string? Chassi,
     string? Brand,
     string? Color,

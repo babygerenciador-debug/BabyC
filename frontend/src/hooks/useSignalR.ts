@@ -26,6 +26,9 @@ function registerHandlers(conn: signalR.HubConnection) {
   // Dashboard: invalidate on any data change
   conn.on('DashboardUpdate', () => {
     queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+    queryClient.invalidateQueries({ queryKey: ['finance-settings'] });
+    queryClient.invalidateQueries({ queryKey: ['finance-categories'] });
+    queryClient.invalidateQueries({ queryKey: ['cost-centers'] });
   });
 
   // Trips: all trip events
@@ -33,6 +36,7 @@ function registerHandlers(conn: signalR.HubConnection) {
     queryClient.invalidateQueries({ queryKey: ['trips'] });
     queryClient.invalidateQueries({ queryKey: ['available-vehicles'] });
     queryClient.invalidateQueries({ queryKey: ['my-active-trip'] });
+    queryClient.invalidateQueries({ queryKey: ['driver-trips'] });
     queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
   });
 
@@ -40,6 +44,7 @@ function registerHandlers(conn: signalR.HubConnection) {
     queryClient.invalidateQueries({ queryKey: ['trips'] });
     queryClient.invalidateQueries({ queryKey: ['available-vehicles'] });
     queryClient.invalidateQueries({ queryKey: ['my-active-trip'] });
+    queryClient.invalidateQueries({ queryKey: ['driver-trips'] });
     queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
   });
 
@@ -47,17 +52,24 @@ function registerHandlers(conn: signalR.HubConnection) {
     queryClient.invalidateQueries({ queryKey: ['trips'] });
     queryClient.invalidateQueries({ queryKey: ['available-vehicles'] });
     queryClient.invalidateQueries({ queryKey: ['my-active-trip'] });
+    queryClient.invalidateQueries({ queryKey: ['driver-trips'] });
   });
 
   // Vehicles
   conn.on('VehicleCreated', () => {
     queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    queryClient.invalidateQueries({ queryKey: ['vehicles-dropdown'] });
+    queryClient.invalidateQueries({ queryKey: ['vehicles-select'] });
+    queryClient.invalidateQueries({ queryKey: ['my-vehicles'] });
     queryClient.invalidateQueries({ queryKey: ['available-vehicles'] });
     queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
   });
 
   conn.on('VehicleUpdated', () => {
     queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    queryClient.invalidateQueries({ queryKey: ['vehicles-dropdown'] });
+    queryClient.invalidateQueries({ queryKey: ['vehicles-select'] });
+    queryClient.invalidateQueries({ queryKey: ['my-vehicles'] });
     queryClient.invalidateQueries({ queryKey: ['available-vehicles'] });
     queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
   });
@@ -65,11 +77,15 @@ function registerHandlers(conn: signalR.HubConnection) {
   // Drivers
   conn.on('DriverCreated', () => {
     queryClient.invalidateQueries({ queryKey: ['drivers'] });
+    queryClient.invalidateQueries({ queryKey: ['drivers-select'] });
+    queryClient.invalidateQueries({ queryKey: ['driver-profile'] });
     queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
   });
 
   conn.on('DriverUpdated', () => {
     queryClient.invalidateQueries({ queryKey: ['drivers'] });
+    queryClient.invalidateQueries({ queryKey: ['drivers-select'] });
+    queryClient.invalidateQueries({ queryKey: ['driver-profile'] });
     queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
   });
 
@@ -88,29 +104,34 @@ function registerHandlers(conn: signalR.HubConnection) {
 
   // Maintenance
   conn.on('MaintenanceCreated', () => {
-    queryClient.invalidateQueries({ queryKey: ['maintenance'] });
+    queryClient.invalidateQueries({ queryKey: ['maintenances'] });
     queryClient.invalidateQueries({ queryKey: ['vehicles'] });
     queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
   });
 
   conn.on('MaintenanceUpdated', () => {
-    queryClient.invalidateQueries({ queryKey: ['maintenance'] });
+    queryClient.invalidateQueries({ queryKey: ['maintenances'] });
     queryClient.invalidateQueries({ queryKey: ['vehicles'] });
     queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
   });
 
   // Fuel
   conn.on('FuelLogCreated', () => {
-    queryClient.invalidateQueries({ queryKey: ['fuel-logs'] });
+    queryClient.invalidateQueries({ queryKey: ['fuellogs'] });
+    queryClient.invalidateQueries({ queryKey: ['fuellogs-finance'] });
+    queryClient.invalidateQueries({ queryKey: ['my-fuel-logs'] });
     queryClient.invalidateQueries({ queryKey: ['vehicles'] });
     queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+    queryClient.invalidateQueries({ queryKey: ['cash-flow-summary'] });
   });
 
   // Inventory
   conn.on('StockUpdated', () => {
     queryClient.invalidateQueries({ queryKey: ['products'] });
+    queryClient.invalidateQueries({ queryKey: ['products-dropdown'] });
     queryClient.invalidateQueries({ queryKey: ['stock-balance'] });
     queryClient.invalidateQueries({ queryKey: ['movements'] });
+    queryClient.invalidateQueries({ queryKey: ['categories'] });
     queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
   });
 

@@ -14,7 +14,8 @@ public sealed record CreateProductCommand(
     string Name,
     string? SKU,
     string? Description,
-    decimal AverageUnitPrice) : IRequest<Result<Guid>>;
+    decimal AverageUnitPrice,
+    int? InitialQuantity = null) : IRequest<Result<Guid>>;
 
 public sealed record UpdateProductCommand(
     Guid Id,

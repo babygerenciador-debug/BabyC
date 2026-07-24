@@ -17,19 +17,28 @@ internal sealed class CreateDriverFuelLogCommandHandler : IRequestHandler<Create
 {
     private readonly IFuelLogRepository _fuelLogRepository;
     private readonly IVehicleRepository _vehicleRepository;
+    private readonly IDriverRepository _driverRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
+    private readonly ICurrentUserService _currentUser;
+    private readonly IFleetNotificationService _notificationService;
 
     public CreateDriverFuelLogCommandHandler(
         IFuelLogRepository fuelLogRepository,
         IVehicleRepository vehicleRepository,
+        IDriverRepository driverRepository,
         IUnitOfWork unitOfWork,
-        ITenantContext tenantContext)
+        ITenantContext tenantContext,
+        ICurrentUserService currentUser,
+        IFleetNotificationService notificationService)
     {
         _fuelLogRepository = fuelLogRepository;
         _vehicleRepository = vehicleRepository;
+        _driverRepository = driverRepository;
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
+        _currentUser = currentUser;
+        _notificationService = notificationService;
     }
 
     public async Task<Result<Guid>> Handle(CreateDriverFuelLogCommand request, CancellationToken cancellationToken)
@@ -38,12 +47,20 @@ internal sealed class CreateDriverFuelLogCommandHandler : IRequestHandler<Create
         if (vehicle is null)
             return Result.Failure<Guid>(Error.NotFound("Vehicle.NotFound", "Vehicle not found."));
 
+        Guid? driverId = null;
+        if (_currentUser.UserId.HasValue)
+        {
+            var driver = await _driverRepository.GetByUserIdAsync(_currentUser.UserId.Value, cancellationToken);
+            if (driver is not null)
+                driverId = driver.Id;
+        }
+
         var result = FuelLog.Create(
             _tenantContext.TenantId,
             _tenantContext.OrganizationId,
             _tenantContext.BusinessUnitId,
             request.VehicleId,
-            null,
+            driverId,
             request.Date,
             request.Odometer,
             request.Liters,
@@ -56,6 +73,8 @@ internal sealed class CreateDriverFuelLogCommandHandler : IRequestHandler<Create
 
         await _fuelLogRepository.AddAsync(result.Value!, cancellationToken);
         await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+
+        await _notificationService.NotifyFuelLogCreatedAsync(result.Value!.Id, cancellationToken);
 
         return Result.Success(result.Value!.Id);
     }

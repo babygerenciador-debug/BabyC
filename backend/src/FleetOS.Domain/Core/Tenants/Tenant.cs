@@ -30,6 +30,7 @@ public sealed class Tenant : AggregateRoot
     public string? PrimaryColor { get; private set; }
     public string TimeZone { get; private set; } = "America/Sao_Paulo";
     public string Language { get; private set; } = "pt-BR";
+    public decimal OwnerSalary { get; private set; }
 
     // ─── Relationships ────────────────────────────────────────────────
     private readonly List<Organization> _organizations = [];
@@ -66,6 +67,7 @@ public sealed class Tenant : AggregateRoot
     }
 
     public void SetPlan(TenantPlan plan) => Plan = plan;
+    public void SetOwnerSalary(decimal ownerSalary) => OwnerSalary = ownerSalary;
 
     public void UpdateLocalization(string timeZone, string language)
     {

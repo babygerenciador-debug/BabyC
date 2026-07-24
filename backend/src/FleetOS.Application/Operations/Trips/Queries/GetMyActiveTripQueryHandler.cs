@@ -27,36 +27,7 @@ internal sealed class GetMyActiveTripQueryHandler : IRequestHandler<GetMyActiveT
         if (driver is null)
             return Result.Success((TripDto?)null);
 
-        var trips = await _tripRepository.GetAllAsync(cancellationToken);
-        var activeTrip = trips
-            .Where(t => t.DriverId == driver.Id && t.Status != Domain.Operations.Trips.TripStatus.Completed && t.Status != Domain.Operations.Trips.TripStatus.Cancelled)
-            .OrderByDescending(t => t.CreatedAt)
-            .FirstOrDefault();
-
-        if (activeTrip is null)
-            return Result.Success((TripDto?)null);
-
-        var dto = new TripDto(
-            activeTrip.Id,
-            activeTrip.DriverId,
-            string.Empty,
-            activeTrip.VehicleId,
-            string.Empty,
-            activeTrip.Origin,
-            activeTrip.Destination,
-            activeTrip.ScheduledStartDate,
-            activeTrip.ScheduledEndDate,
-            activeTrip.TripValue,
-            activeTrip.PaymentStatus.ToString(),
-            activeTrip.Notes,
-            activeTrip.ActualStartDate,
-            activeTrip.ActualEndDate,
-            activeTrip.ChecklistCompleted,
-            activeTrip.ChecklistNotes,
-            activeTrip.Status.ToString(),
-            activeTrip.CreatedAt,
-            activeTrip.UpdatedAt);
-
-        return Result.Success((TripDto?)dto);
+        var activeTrip = await _tripRepository.GetActiveTripByDriverIdAsync(driver.Id, cancellationToken);
+        return Result.Success(activeTrip);
     }
 }

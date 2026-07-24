@@ -46,8 +46,23 @@ internal sealed class PayTripCommandHandler : IRequestHandler<PayTripCommand, Re
         {
             var categories = await _categoryRepository.GetAllAsync(cancellationToken);
             var revenueCategory = categories.FirstOrDefault(c => c.Type == TransactionType.Revenue && c.Name.ToLower().Contains("viagem"));
-            
-            if (revenueCategory != null)
+
+            if (revenueCategory is null)
+            {
+                var catResult = FinancialCategory.Create(
+                    _tenantContext.TenantId,
+                    _tenantContext.OrganizationId,
+                    _tenantContext.BusinessUnitId,
+                    "Viagens",
+                    TransactionType.Revenue);
+                if (catResult.IsSuccess && catResult.Value is not null)
+                {
+                    revenueCategory = catResult.Value;
+                    await _categoryRepository.AddAsync(revenueCategory, cancellationToken);
+                }
+            }
+
+            if (revenueCategory is not null)
             {
                 var transaction = FinancialTransaction.Create(
                     _tenantContext.TenantId,
@@ -57,13 +72,15 @@ internal sealed class PayTripCommandHandler : IRequestHandler<PayTripCommand, Re
                     null,
                     TransactionType.Revenue,
                     trip.TripValue,
-                    DateTime.UtcNow,
+                    trip.ActualEndDate ?? trip.ScheduledEndDate,
                     $"Viagem: {trip.Origin} → {trip.Destination}",
                     trip.Id);
 
                 if (transaction.IsSuccess)
                 {
-                    await _transactionRepository.AddAsync(transaction.Value!, cancellationToken);
+                    var tx = transaction.Value!;
+                    tx.Pay(trip.ActualEndDate ?? trip.ScheduledEndDate);
+                    await _transactionRepository.AddAsync(tx, cancellationToken);
                 }
             }
         }

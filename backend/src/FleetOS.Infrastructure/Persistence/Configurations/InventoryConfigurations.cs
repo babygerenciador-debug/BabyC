@@ -47,6 +47,14 @@ internal sealed class StockBalanceConfiguration : IEntityTypeConfiguration<Stock
 
         builder.Property(s => s.TenantId).IsRequired();
         builder.Property(s => s.LocationType).IsRequired();
+
+        builder.HasIndex(s => new { s.TenantId, s.ProductId })
+            .IsUnique()
+            .HasFilter("\"location_type\" = 1 AND \"vehicle_id\" IS NULL");
+
+        builder.HasIndex(s => new { s.TenantId, s.ProductId, s.VehicleId })
+            .IsUnique()
+            .HasFilter("\"location_type\" = 2 AND \"vehicle_id\" IS NOT NULL");
         
         builder.HasOne<Product>()
             .WithMany()

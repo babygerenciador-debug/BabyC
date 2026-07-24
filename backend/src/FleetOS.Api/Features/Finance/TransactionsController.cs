@@ -42,12 +42,11 @@ public sealed class TransactionsController : BaseController
 
     [HttpGet("summary")]
     public async Task<IActionResult> GetSummary(
-        [FromQuery] decimal ownerSalary,
         [FromQuery] DateTime? startDate = null,
         [FromQuery] DateTime? endDate = null,
         CancellationToken cancellationToken = default)
     {
-        var query = new GetCashFlowSummaryQuery(startDate, endDate, ownerSalary);
+        var query = new GetCashFlowSummaryQuery(startDate, endDate);
         var result = await Mediator.Send(query, cancellationToken);
         
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);

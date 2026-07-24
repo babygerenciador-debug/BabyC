@@ -72,4 +72,17 @@ public sealed class DriversController : BaseController
         
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
+
+    [HttpPatch("{id:guid}/availability")]
+    public async Task<IActionResult> SetAvailability(
+        Guid id,
+        [FromBody] SetDriverAvailabilityCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.Id)
+            return BadRequest(FleetOS.Shared.Results.Error.Validation("Driver.IdMismatch", "The ID in the URL must match the ID in the body."));
+
+        var result = await Mediator.Send(command, cancellationToken);
+        return result.IsSuccess ? NoContent() : BadRequest(result.Error);
+    }
 }

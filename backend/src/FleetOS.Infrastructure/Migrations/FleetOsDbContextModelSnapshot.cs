@@ -395,6 +395,12 @@ namespace FleetOS.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
+                    b.Property<decimal>("OwnerSalary")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("owner_salary");
+
                     b.Property<string>("Plan")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -1705,7 +1711,199 @@ namespace FleetOS.Infrastructure.Migrations
                     b.HasIndex("VehicleId")
                         .HasDatabaseName("ix_stock_balances_vehicle_id");
 
+                    b.HasIndex("TenantId", "ProductId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_stock_balances_tenant_id_product_id")
+                        .HasFilter("\"location_type\" = 1 AND \"vehicle_id\" IS NULL");
+
+                    b.HasIndex("TenantId", "ProductId", "VehicleId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_stock_balances_tenant_id_product_id_vehicle_id")
+                        .HasFilter("\"location_type\" = 2 AND \"vehicle_id\" IS NOT NULL");
+
                     b.ToTable("StockBalances", (string)null);
+                });
+
+            modelBuilder.Entity("FleetOS.Domain.Operations.Checklists.ChecklistItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_unit_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<long>("RowVersion")
+                        .HasColumnType("bigint")
+                        .HasColumnName("row_version");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_checklist_items");
+
+                    b.ToTable("ChecklistItems", (string)null);
+                });
+
+            modelBuilder.Entity("FleetOS.Domain.Operations.Checklists.DailyChecklist", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_unit_id");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<Guid>("DriverId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("driver_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<long>("RowVersion")
+                        .HasColumnType("bigint")
+                        .HasColumnName("row_version");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<Guid>("VehicleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("vehicle_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_daily_checklists");
+
+                    b.HasIndex("VehicleId", "Date")
+                        .IsUnique()
+                        .HasDatabaseName("ix_daily_checklists_vehicle_id_date");
+
+                    b.ToTable("DailyChecklists", (string)null);
+                });
+
+            modelBuilder.Entity("FleetOS.Domain.Operations.Checklists.DailyChecklistItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ChecklistItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("checklist_item_id");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<Guid>("DailyChecklistId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("daily_checklist_id");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_completed");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("title");
+
+                    b.HasKey("Id")
+                        .HasName("pk_daily_checklist_items");
+
+                    b.HasIndex("DailyChecklistId")
+                        .HasDatabaseName("ix_daily_checklist_items_daily_checklist_id");
+
+                    b.ToTable("DailyChecklistItems", (string)null);
                 });
 
             modelBuilder.Entity("FleetOS.Domain.Operations.Drivers.Driver", b =>
@@ -1881,6 +2079,10 @@ namespace FleetOS.Infrastructure.Migrations
                         .HasColumnType("character varying(255)")
                         .HasColumnName("origin");
 
+                    b.Property<int>("PaymentStatus")
+                        .HasColumnType("integer")
+                        .HasColumnName("payment_status");
+
                     b.Property<long>("RowVersion")
                         .HasColumnType("bigint")
                         .HasColumnName("row_version");
@@ -1900,6 +2102,10 @@ namespace FleetOS.Infrastructure.Migrations
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
+
+                    b.Property<decimal>("TripValue")
+                        .HasColumnType("numeric")
+                        .HasColumnName("trip_value");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -2071,6 +2277,16 @@ namespace FleetOS.Infrastructure.Migrations
                         .HasConstraintName("fk_stock_balances_vehicles_vehicle_id");
                 });
 
+            modelBuilder.Entity("FleetOS.Domain.Operations.Checklists.DailyChecklistItem", b =>
+                {
+                    b.HasOne("FleetOS.Domain.Operations.Checklists.DailyChecklist", null)
+                        .WithMany("Items")
+                        .HasForeignKey("DailyChecklistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_daily_checklist_items_daily_checklists_daily_checklist_id");
+                });
+
             modelBuilder.Entity("FleetOS.Domain.Operations.Drivers.Driver", b =>
                 {
                     b.HasOne("FleetOS.Domain.Core.Users.User", null)
@@ -2116,6 +2332,11 @@ namespace FleetOS.Infrastructure.Migrations
             modelBuilder.Entity("FleetOS.Domain.Fleet.Vehicles.Vehicle", b =>
                 {
                     b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("FleetOS.Domain.Operations.Checklists.DailyChecklist", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

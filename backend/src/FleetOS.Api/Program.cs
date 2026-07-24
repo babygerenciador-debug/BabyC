@@ -15,15 +15,22 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
-    builder.Host.UseSerilog((ctx, lc) => lc
-        .ReadFrom.Configuration(ctx.Configuration)
-        .Enrich.FromLogContext()
-        .Enrich.WithMachineName()
-        .Enrich.WithThreadId()
-        .WriteTo.Console()
-        .WriteTo.File("logs/fleetos-.log",
-            rollingInterval: RollingInterval.Day,
-            retainedFileCountLimit: 30));
+    builder.Host.UseSerilog((ctx, lc) =>
+    {
+        lc.ReadFrom.Configuration(ctx.Configuration)
+          .Enrich.FromLogContext()
+          .Enrich.WithMachineName()
+          .Enrich.WithThreadId()
+          .WriteTo.Console();
+
+        // File logging only in non-production (Render has ephemeral disk)
+        if (!ctx.HostingEnvironment.IsProduction())
+        {
+            lc.WriteTo.File("logs/fleetos-.log",
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 30);
+        }
+    });
 
     builder.Services
         .AddApiServices(builder.Configuration)

@@ -3,17 +3,17 @@
   height: 100vh;
   width: 100%;
   overflow: hidden;
-  background-color: var(--bg-color);
+  background: var(--bg-color);
 }
 
-/* Sidebar */
+/* ── Sidebar ── */
 .sidebar {
   width: var(--sidebar-width);
-  background-color: var(--bg-card);
+  background: var(--bg-sidebar);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 50;
 }
 
@@ -22,15 +22,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.5rem;
+  padding: 0 1.25rem;
   border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
-.company-logo h2 {
-  color: var(--brand-color);
-  margin: 0;
-  font-size: 1.5rem;
-  letter-spacing: -0.5px;
+.sidebar-logo {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  display: block;
 }
 
 .mobile-close-btn {
@@ -40,73 +41,78 @@
 
 .sidebar-nav {
   flex: 1;
-  padding: 1.5rem 1rem;
+  padding: 1rem 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.15rem;
   overflow-y: auto;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  border-radius: var(--border-radius-md);
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-md);
   color: var(--text-secondary);
   font-weight: 500;
-  transition: all 0.2s;
+  font-size: 0.9rem;
+  transition: all 0.15s;
 }
 
 .nav-item:hover {
-  background-color: var(--brand-light);
+  background: var(--brand-light);
   color: var(--brand-color);
 }
 
 .nav-item.active {
-  background-color: var(--brand-color);
-  color: white;
-  box-shadow: var(--shadow-sm);
+  background: var(--brand-color);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 8px hsla(var(--brand-h), var(--brand-s), var(--brand-l), 0.3);
 }
 
 .sidebar-footer {
-  padding: 1.5rem;
+  padding: 1rem 1.25rem;
   border-top: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .user-info {
   display: flex;
   flex-direction: column;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .user-name {
   font-weight: 600;
-  color: var(--text-primary);
+  font-size: 0.925rem;
 }
 
 .user-role {
-  font-size: 0.8rem;
+  font-size: 0.775rem;
   color: var(--text-secondary);
+  text-transform: capitalize;
 }
 
 .logout-button {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.625rem;
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.625rem 0.875rem;
   color: var(--error);
-  border-radius: var(--border-radius-md);
-  transition: background-color 0.2s;
+  border-radius: var(--radius-md);
+  transition: background 0.15s;
   font-weight: 500;
+  font-size: 0.875rem;
 }
 
 .logout-button:hover {
-  background-color: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.08);
 }
 
-/* Main Content */
+/* ── Main ── */
 .main-content {
   flex: 1;
   display: flex;
@@ -114,9 +120,10 @@
   overflow: hidden;
 }
 
+/* ── Topbar ── */
 .topbar {
   height: var(--topbar-height);
-  background-color: var(--bg-card);
+  background: var(--bg-topbar);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -128,45 +135,227 @@
 .mobile-menu-btn {
   display: none;
   color: var(--text-primary);
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.mobile-menu-btn:hover {
+  background: var(--brand-light);
 }
 
 .topbar-right {
   margin-left: auto;
   display: flex;
   align-items: center;
+  gap: 0.25rem;
 }
 
+/* ── Theme Toggle ── */
+.theme-toggle {
+  color: var(--text-secondary);
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.theme-toggle:hover {
+  background: var(--brand-light);
+  color: var(--brand-color);
+}
+
+/* ── Notification ── */
 .notification-btn {
   position: relative;
   color: var(--text-secondary);
   padding: 0.5rem;
   border-radius: 50%;
-  transition: background-color 0.2s;
+  transition: background 0.15s;
 }
 
 .notification-btn:hover {
-  background-color: var(--brand-light);
+  background: var(--brand-light);
   color: var(--brand-color);
 }
 
 .notification-badge {
   position: absolute;
-  top: 4px;
-  right: 6px;
-  width: 8px;
-  height: 8px;
-  background-color: var(--error);
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  background: var(--error);
+  color: #fff;
+  border-radius: 9px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 0 0 2px var(--bg-topbar);
+}
+
+.notification-wrap {
+  position: relative;
+}
+
+.notif-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.notif-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 101;
+  width: 400px;
+  max-height: 520px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  background: var(--bg-subtle);
+}
+
+.notif-header h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.notif-count {
+  font-size: 0.75rem;
+  color: var(--brand-color);
+  font-weight: 600;
+}
+
+.notif-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.notif-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.notif-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.notif-item:hover {
+  background: var(--bg-hover);
+}
+
+.notif-item:last-child {
+  border-bottom: none;
+}
+
+.notif-icon {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notif-icon.info {
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--info);
+}
+
+.notif-icon.warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--warning);
+}
+
+.notif-icon.error {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--error);
+}
+
+.notif-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-body strong {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.2rem;
+}
+
+.notif-msg {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin-bottom: 0.3rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notif-time {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.notif-dismiss {
+  color: var(--text-secondary);
+  padding: 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  opacity: 0;
+  transition: opacity 0.12s;
+  margin-top: -2px;
+}
+
+.notif-item:hover .notif-dismiss {
+  opacity: 1;
+}
+
+.notif-dismiss:hover {
+  color: var(--success);
+  background: rgba(34, 197, 94, 0.1);
 }
 
 .content-area {
   flex: 1;
   overflow-y: auto;
-  padding: 2rem;
-  background-color: var(--bg-color);
+  padding: 1.75rem 2rem;
+  background: var(--bg-color);
 }
 
-/* Responsive Mobile */
+/* ── Responsive ── */
 @media (max-width: 1024px) {
   .sidebar {
     position: fixed;
@@ -174,22 +363,26 @@
     top: 0;
     bottom: 0;
     transform: translateX(-100%);
+    box-shadow: var(--shadow-lg);
   }
 
   .sidebar.open {
     transform: translateX(0);
   }
 
-  .mobile-close-btn, .mobile-menu-btn {
-    display: block;
+  .mobile-close-btn,
+  .mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .sidebar-overlay {
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.4);
     z-index: 40;
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(4px);
   }
 
   .content-area {

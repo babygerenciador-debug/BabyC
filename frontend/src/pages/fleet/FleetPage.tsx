@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Bus, Droplets } from 'lucide-react';
+import { Bus, Droplets, ClipboardCheck } from 'lucide-react';
 import './FleetPage.css';
 import VehicleList from './components/VehicleList';
 import FuelLogList from './components/FuelLogList';
+import ChecklistTab from './components/ChecklistTab';
 
-type Tab = 'vehicles' | 'fuellogs';
+type Tab = 'vehicles' | 'fuellogs' | 'checklist';
 
 export default function FleetPage() {
   const [activeTab, setActiveTab] = useState<Tab>('vehicles');
@@ -18,7 +19,7 @@ export default function FleetPage() {
         </div>
       </div>
 
-      <div className="fleet-tabs">
+      <div className="tabs">
         <button 
           className={`tab-btn ${activeTab === 'vehicles' ? 'active' : ''}`}
           onClick={() => setActiveTab('vehicles')}
@@ -33,11 +34,19 @@ export default function FleetPage() {
           <Droplets size={18} />
           <span>Abastecimentos</span>
         </button>
+        <button 
+          className={`tab-btn ${activeTab === 'checklist' ? 'active' : ''}`}
+          onClick={() => setActiveTab('checklist')}
+        >
+          <ClipboardCheck size={18} />
+          <span>Checklist</span>
+        </button>
       </div>
 
       <div className="tab-content">
         {activeTab === 'vehicles' && <VehicleList />}
         {activeTab === 'fuellogs' && <FuelLogList />}
+        {activeTab === 'checklist' && <ChecklistTab />}
       </div>
     </div>
   );

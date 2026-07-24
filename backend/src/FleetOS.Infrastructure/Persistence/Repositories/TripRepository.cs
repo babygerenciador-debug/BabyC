@@ -80,6 +80,88 @@ internal sealed class TripRepository : ITripRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<TripDto?> GetActiveTripByDriverIdAsync(Guid driverId, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Set<Trip>()
+            .Where(t => t.TenantId == _tenantContext.TenantId && t.DriverId == driverId
+                && t.Status != TripStatus.Completed && t.Status != TripStatus.Cancelled)
+            .OrderByDescending(t => t.CreatedAt)
+            .Join(_dbContext.Set<FleetOS.Domain.Operations.Drivers.Driver>(),
+                t => t.DriverId,
+                d => d.Id,
+                (t, d) => new { t, d })
+            .Join(_dbContext.Set<FleetOS.Domain.Core.Users.User>(),
+                td => td.d.UserId,
+                u => u.Id,
+                (td, u) => new { td.t, td.d, u })
+            .Join(_dbContext.Set<FleetOS.Domain.Fleet.Vehicles.Vehicle>(),
+                tdu => tdu.t.VehicleId,
+                v => v.Id,
+                (tdu, v) => new TripDto(
+                    tdu.t.Id,
+                    tdu.t.DriverId,
+                    tdu.u.Name,
+                    tdu.t.VehicleId,
+                    v.LicensePlate,
+                    tdu.t.Origin,
+                    tdu.t.Destination,
+                    tdu.t.ScheduledStartDate,
+                    tdu.t.ScheduledEndDate,
+                    tdu.t.TripValue,
+                    tdu.t.PaymentStatus.ToString(),
+                    tdu.t.Notes,
+                    tdu.t.ActualStartDate,
+                    tdu.t.ActualEndDate,
+                    tdu.t.ChecklistCompleted,
+                    tdu.t.ChecklistNotes,
+                    tdu.t.Status.ToString(),
+                    tdu.t.CreatedAt,
+                    tdu.t.UpdatedAt
+                ))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<TripDto>> GetTripsByDriverIdAsync(Guid driverId, int take = 50, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Set<Trip>()
+            .Where(t => t.TenantId == _tenantContext.TenantId && t.DriverId == driverId)
+            .OrderByDescending(t => t.ScheduledStartDate)
+            .Take(take)
+            .Join(_dbContext.Set<FleetOS.Domain.Operations.Drivers.Driver>(),
+                t => t.DriverId,
+                d => d.Id,
+                (t, d) => new { t, d })
+            .Join(_dbContext.Set<FleetOS.Domain.Core.Users.User>(),
+                td => td.d.UserId,
+                u => u.Id,
+                (td, u) => new { td.t, td.d, u })
+            .Join(_dbContext.Set<FleetOS.Domain.Fleet.Vehicles.Vehicle>(),
+                tdu => tdu.t.VehicleId,
+                v => v.Id,
+                (tdu, v) => new TripDto(
+                    tdu.t.Id,
+                    tdu.t.DriverId,
+                    tdu.u.Name,
+                    tdu.t.VehicleId,
+                    v.LicensePlate,
+                    tdu.t.Origin,
+                    tdu.t.Destination,
+                    tdu.t.ScheduledStartDate,
+                    tdu.t.ScheduledEndDate,
+                    tdu.t.TripValue,
+                    tdu.t.PaymentStatus.ToString(),
+                    tdu.t.Notes,
+                    tdu.t.ActualStartDate,
+                    tdu.t.ActualEndDate,
+                    tdu.t.ChecklistCompleted,
+                    tdu.t.ChecklistNotes,
+                    tdu.t.Status.ToString(),
+                    tdu.t.CreatedAt,
+                    tdu.t.UpdatedAt
+                ))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<PagedResult<TripDto>> GetPaginatedTripsAsync(int page, int pageSize, string? searchTerm, string? status, Guid? driverId, Guid? vehicleId, CancellationToken cancellationToken = default)
     {
         var query = _dbContext.Set<Trip>()
