@@ -35,11 +35,12 @@ internal sealed class DeleteDriverCommandHandler : IRequestHandler<DeleteDriverC
         if (driver is null)
             return Result.Failure(Error.NotFound("Driver.NotFound", "Driver not found."));
 
+        _driverRepository.Remove(driver);
+
         var user = await _userRepository.GetByIdAsync(driver.UserId, cancellationToken);
         if (user is not null)
             _userRepository.Remove(user);
 
-        _driverRepository.Remove(driver);
         await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
 
         await _notificationService.NotifyDriverUpdatedAsync(request.Id, cancellationToken);

@@ -46,6 +46,7 @@ public static class InfrastructureServiceExtensions
 
         // ── Interceptors / Scoped services ────────────────────────────
         services.AddScoped<AuditInterceptor>();
+        services.AddScoped<RlsSessionInterceptor>();
         services.RegisterIdentityServices();
         services.RegisterInfrastructureServices();
 
@@ -105,7 +106,7 @@ public static class InfrastructureServiceExtensions
         // services.AddSingleton<ICacheService, RedisCacheService>();
 
         // Supabase Storage
-        // services.AddScoped<IStorageService, SupabaseStorageService>();
+        services.AddScoped<IStorageService, SupabaseStorageService>();
 
         // Real-time notifications
         services.AddScoped<IFleetNotificationService, FleetNotificationService>();
@@ -143,7 +144,7 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IVehicleIssueReportRepository, VehicleIssueReportRepository>();
         
         // Background Jobs
-        services.AddHostedService<FleetOS.Infrastructure.BackgroundJobs.RefuelReminderJob>();
+        services.AddHostedService<FleetOS.Infrastructure.BackgroundJobs.AlertJob>();
 
         return services;
     }

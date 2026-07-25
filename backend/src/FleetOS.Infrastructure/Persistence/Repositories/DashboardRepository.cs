@@ -1,6 +1,7 @@
 using FleetOS.Application.Common.Interfaces;
 using FleetOS.Application.Dashboard.Queries;
 using FleetOS.Domain.Common.Interfaces;
+using FleetOS.Domain.Common.Notifications;
 using FleetOS.Domain.Core.Tenants;
 using FleetOS.Domain.Finance;
 using FleetOS.Domain.Fleet.Fuel;
@@ -25,6 +26,8 @@ internal sealed class DashboardRepository : IDashboardRepository
     public async Task<DashboardSummaryDto> GetSummaryAsync(CancellationToken cancellationToken = default)
     {
         var tenantId = _tenantContext.TenantId;
+        var userId = _tenantContext.UserId;
+        var role = _tenantContext.UserRole.ToString();
         var startOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
         var totalVehicles = await _dbContext.Set<Vehicle>().CountAsync(v => v.TenantId == tenantId, cancellationToken);
@@ -36,6 +39,10 @@ internal sealed class DashboardRepository : IDashboardRepository
         var ongoingTrips = await _dbContext.Set<Trip>().CountAsync(t => t.TenantId == tenantId && t.Status == TripStatus.InProgress, cancellationToken);
 
         var stockAlerts = await _dbContext.Set<StockBalance>().CountAsync(s => s.TenantId == tenantId && s.Quantity <= s.MinimumStockLevel, cancellationToken);
+
+        var unreadNotifications = await _dbContext.Set<Notification>()
+            .CountAsync(n => n.TenantId == tenantId && !n.IsRead &&
+                (n.UserId == userId || n.Role == role), cancellationToken);
 
         var monthRevenues = await _dbContext.Set<FinancialTransaction>()
             .Where(t => t.TenantId == tenantId && t.Status == TransactionStatus.Paid && t.Date >= startOfMonth && t.Type == TransactionType.Revenue)
@@ -69,6 +76,7 @@ internal sealed class DashboardRepository : IDashboardRepository
             totalTripsThisMonth,
             ongoingTrips,
             stockAlerts,
+            unreadNotifications,
             monthRevenues,
             monthExpenses,
             monthBalance,

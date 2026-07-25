@@ -24,6 +24,9 @@ public static class DbInitializer
 
         try
         {
+            await context.Database.OpenConnectionAsync();
+            context.SetTenantId(Guid.Empty);
+
             logger.LogInformation("Applying migrations...");
             await context.Database.MigrateAsync();
 
@@ -94,11 +97,66 @@ public static class DbInitializer
 
                 logger.LogInformation("Database seeded successfully.");
             }
+
+            // Always seed additional users (idempotent — skips if already exists)
+            var existingTenant = await context.Tenants.FirstOrDefaultAsync(t => t.Slug == "babyturismo");
+            if (existingTenant != null)
+            {
+                context.SetTenantId(existingTenant.Id);
+            }
+            await SeedAdditionalUsersAsync(context, passwordService, logger, configuration);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "An error occurred while migrating or seeding the database.");
             throw;
         }
+    }
+
+    private static async Task SeedAdditionalUsersAsync(
+        FleetOsDbContext context,
+        IPasswordService passwordService,
+        ILogger logger,
+        IConfiguration? configuration = null)
+    {
+        var added = false;
+
+        // Extra users are configured via environment variables, not hardcoded
+        // Set Seed__ExtraUserEmail, Seed__ExtraUserPassword, Seed__ExtraUserName in .env or Render
+        var extraUserEmail = configuration?["Seed:ExtraUserEmail"];
+        var extraUserPassword = configuration?["Seed:ExtraUserPassword"];
+        var extraUserName = configuration?["Seed:ExtraUserName"];
+
+        if (!string.IsNullOrEmpty(extraUserEmail) && !string.IsNullOrEmpty(extraUserPassword))
+        {
+            if (!await context.Users.IgnoreQueryFilters().AnyAsync(x => x.EmailAddress == extraUserEmail))
+            {
+                var emailResult = Email.Create(extraUserEmail);
+                if (emailResult.IsSuccess && emailResult.Value is not null)
+                {
+                    var babyTenant = await context.Tenants.FirstOrDefaultAsync(t => t.Slug == "babyturismo");
+                    if (babyTenant != null)
+                    {
+                        var org = await context.Organizations.FirstOrDefaultAsync(o => o.TenantId == babyTenant.Id);
+                        var bu = await context.BusinessUnits.FirstOrDefaultAsync(b => b.TenantId == babyTenant.Id);
+
+                        var user = User.CreateAdminUser(
+                            babyTenant.Id,
+                            org?.Id ?? Guid.Empty,
+                            bu?.Id ?? Guid.Empty,
+                            extraUserName ?? "Extra Admin",
+                            emailResult.Value,
+                            passwordService.HashPassword(extraUserPassword),
+                            UserRole.TenantAdmin);
+
+                        await context.Users.AddAsync(user);
+                        added = true;
+                        logger.LogInformation("Additional user seeded: {Email}", extraUserEmail);
+                    }
+                }
+            }
+        }
+
+        if (added) await context.SaveChangesAsync();
     }
 }

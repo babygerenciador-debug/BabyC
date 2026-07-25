@@ -14,6 +14,7 @@ interface DashboardSummaryDto {
   totalTripsThisMonth: number;
   ongoingTrips: number;
   lowStockItemsCount: number;
+  unreadNotificationsCount: number;
   monthRevenues: number;
   monthExpenses: number;
   monthBalance: number;

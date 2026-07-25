@@ -14,9 +14,6 @@
     <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
-  
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="9.0.2" />
-  
     <PackageReference Include="StackExchange.Redis" Version="2.9.11" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.0" />
 

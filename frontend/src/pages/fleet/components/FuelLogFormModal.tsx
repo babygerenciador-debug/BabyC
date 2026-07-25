@@ -31,6 +31,14 @@ export default function FuelLogFormModal({ onClose }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+  const validateFile = (f: File): string | null => {
+    if (!ALLOWED_TYPES.includes(f.type)) return 'Tipo de arquivo não permitido. Use JPEG, PNG, WebP ou PDF.';
+    if (f.size > MAX_FILE_SIZE) return `Arquivo muito grande. Máximo 10MB.`;
+    return null;
+  };
 
   const { data: vehiclesData } = useQuery({
     queryKey: ['vehicles-dropdown'],
@@ -171,7 +179,20 @@ export default function FuelLogFormModal({ onClose }: Props) {
                   type="file" 
                   id="receipt" 
                   accept="image/*,.pdf" 
-                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  onChange={(e) => {
+                    const selected = e.target.files?.[0] || null;
+                    if (selected) {
+                      const error = validateFile(selected);
+                      if (error) {
+                        setUploadError(error);
+                        setFile(null);
+                        e.target.value = '';
+                        return;
+                      }
+                    }
+                    setUploadError('');
+                    setFile(selected);
+                  }}
                   className="file-input"
                 />
                 <label htmlFor="receipt" className="file-label">

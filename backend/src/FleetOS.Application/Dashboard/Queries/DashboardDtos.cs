@@ -8,6 +8,7 @@ public sealed record DashboardSummaryDto(
     int TotalTripsThisMonth,
     int OngoingTrips,
     int LowStockItemsCount,
+    int UnreadNotificationsCount,
     decimal MonthRevenues,
     decimal MonthExpenses,
     decimal MonthBalance,

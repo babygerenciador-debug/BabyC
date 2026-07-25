@@ -9,9 +9,15 @@ public sealed class UnitOfWork(FleetOsDbContext dbContext) : IUnitOfWork
         return dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task<int> CommitAsync(Guid userId, CancellationToken cancellationToken = default)
+    public Task<int> CommitAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
-        // AuditInterceptor already reads the current user from ICurrentUserService
+        dbContext.SetTenantId(tenantId);
+        return dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task<int> CommitAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        dbContext.SetTenantId(tenantId, userId);
         return dbContext.SaveChangesAsync(cancellationToken);
     }
 }

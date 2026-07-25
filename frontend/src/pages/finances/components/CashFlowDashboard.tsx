@@ -138,14 +138,10 @@ export default function CashFlowDashboard() {
           </div>
 
           <div className={`kpi-card glass-panel summary-card ${data.netBalance >= 0 ? 'positive' : 'negative'}`}>
-            <div className="kpi-content" style={{ textAlign: 'center', width: '100%' }}>
-              <span style={{ fontSize: '1.2rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                Saldo Final / Lucro Real da Empresa
-              </span>
-              <h1 style={{ fontSize: '3rem', margin: '1rem 0' }}>{formatCurrency(data.netBalance)}</h1>
-              <p style={{ opacity: 0.9 }}>
-                Fórmula: (Salário Bruto - 27% Imposto) - Despesas + Receitas
-              </p>
+            <div className="kpi-content">
+              <span className="summary-label">Saldo Final / Lucro Real da Empresa</span>
+              <h1 className="summary-value">{formatCurrency(data.netBalance)}</h1>
+              <p className="summary-formula">(Salário Bruto − 27% Imposto) − Despesas + Receitas</p>
             </div>
           </div>
 

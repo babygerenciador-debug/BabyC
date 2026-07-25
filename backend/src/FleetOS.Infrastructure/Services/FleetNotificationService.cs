@@ -54,4 +54,7 @@ public sealed class FleetNotificationService : IFleetNotificationService
 
     public async Task NotifyStockUpdatedAsync(CancellationToken cancellationToken = default)
         => await _hubContext.Clients.All.SendAsync("StockUpdated", cancellationToken);
+
+    public async Task NotifyNotificationCreatedAsync(CancellationToken cancellationToken = default)
+        => await _hubContext.Clients.All.SendAsync("ReceiveNotification", cancellationToken);
 }

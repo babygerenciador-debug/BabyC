@@ -16,7 +16,8 @@ public interface IRepository<T> where T : Entity
 public interface IUnitOfWork
 {
     Task<int> CommitAsync(CancellationToken cancellationToken = default);
-    Task<int> CommitAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<int> CommitAsync(Guid tenantId, CancellationToken cancellationToken = default);
+    Task<int> CommitAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Tenant context injected into every request.</summary>

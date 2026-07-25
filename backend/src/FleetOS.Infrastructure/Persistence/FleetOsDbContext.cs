@@ -8,6 +8,7 @@ using FleetOS.Domain.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace FleetOS.Infrastructure.Persistence;
 
@@ -18,17 +19,23 @@ namespace FleetOS.Infrastructure.Persistence;
 public sealed class FleetOsDbContext : DbContext, IUnitOfWork
 {
     private readonly AuditInterceptor _auditInterceptor;
+    private readonly RlsSessionInterceptor _rlsInterceptor;
     private readonly IPublisher _publisher;
+    private readonly ILogger<FleetOsDbContext> _logger;
     private Guid _currentTenantId;
 
     public FleetOsDbContext(
         DbContextOptions<FleetOsDbContext> options,
         AuditInterceptor auditInterceptor,
-        IPublisher publisher)
+        RlsSessionInterceptor rlsInterceptor,
+        IPublisher publisher,
+        ILogger<FleetOsDbContext> logger)
         : base(options)
     {
         _auditInterceptor = auditInterceptor;
+        _rlsInterceptor = rlsInterceptor;
         _publisher = publisher;
+        _logger = logger;
     }
 
     // ─── DbSets ───────────────────────────────────────────────────────
@@ -72,6 +79,7 @@ public sealed class FleetOsDbContext : DbContext, IUnitOfWork
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.AddInterceptors(_auditInterceptor);
+        optionsBuilder.AddInterceptors(_rlsInterceptor);
         optionsBuilder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
     }
 
@@ -149,9 +157,22 @@ public sealed class FleetOsDbContext : DbContext, IUnitOfWork
     /// Sets the current tenant context for query filtering.
     /// Called by the TenantResolver middleware on every request.
     /// </summary>
-    public void SetTenantId(Guid tenantId)
+    public void SetTenantId(Guid tenantId, Guid? userId = null)
     {
         _currentTenantId = tenantId;
+        try
+        {
+            Database.ExecuteSqlRaw(
+                "SELECT set_config('app.current_tenant_id', {0}, false), set_config('app.current_user_id', {1}, false)",
+                tenantId.ToString(),
+                (userId ?? Guid.Empty).ToString());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "SetTenantId failed for tenant {TenantId}: {Message}",
+                tenantId, ex.Message);
+        }
     }
 
     // ─── Domain Events ────────────────────────────────────────────────
@@ -188,6 +209,12 @@ public sealed class FleetOsDbContext : DbContext, IUnitOfWork
 
     public async Task<int> CommitAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
+        return await SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<int> CommitAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        _currentTenantId = tenantId;
         return await SaveChangesAsync(cancellationToken);
     }
 }

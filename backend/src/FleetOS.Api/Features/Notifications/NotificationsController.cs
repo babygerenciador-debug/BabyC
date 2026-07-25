@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FleetOS.Api.Features.Notifications;
 
-[Authorize(Roles = "SystemAdmin,TenantAdmin,Manager")]
+[Authorize(Roles = "SystemAdmin,TenantAdmin,Manager,Driver")]
 [Route("api/v1/[controller]")]
 public sealed class NotificationsController : BaseController
 {

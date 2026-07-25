@@ -50,7 +50,7 @@ public sealed class LoginCommandHandler(
         if (!passwordService.VerifyPassword(request.Password, user.PasswordHash))
         {
             var failedResult = user.RecordFailedLogin();
-            await unitOfWork.CommitAsync(user.TenantId, cancellationToken);
+            await unitOfWork.CommitAsync(user.TenantId, user.Id, cancellationToken);
             if (failedResult.IsFailure && failedResult.Error.Code == "Auth.UserBlocked")
                 return Result.Failure<LoginResponse>(failedResult.Error);
             return Result.Failure<LoginResponse>(Error.Auth.InvalidCredentials);
@@ -67,7 +67,7 @@ public sealed class LoginCommandHandler(
         var accessExpiryMinutes = int.Parse(configuration["Jwt:AccessExpiryMinutes"] ?? "60");
 
         user.AddRefreshToken(refreshToken, DateTimeOffset.UtcNow.AddDays(refreshExpiryDays));
-        await unitOfWork.CommitAsync(user.TenantId, cancellationToken);
+        await unitOfWork.CommitAsync(user.TenantId, user.Id, cancellationToken);
 
         var userDto = new UserDto(
             user.Id,

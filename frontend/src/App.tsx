@@ -15,16 +15,27 @@ import DriverPortalPage from './pages/driver/DriverPortalPage';
 import { useAuthStore } from './store/useAuthStore';
 import type { ReactNode } from 'react';
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+}
+
 function AdminRoute({ children }: { children: ReactNode }) {
   const user = useAuthStore((s) => s.user);
-  if (!user) return <Navigate to="/login" replace />;
+  const token = useAuthStore((s) => s.token);
+  if (!user || !token || isTokenExpired(token)) return <Navigate to="/login" replace />;
   if (user.role === 'Driver') return <Navigate to="/driver" replace />;
   return <>{children}</>;
 }
 
 function DriverRoute({ children }: { children: ReactNode }) {
   const user = useAuthStore((s) => s.user);
-  if (!user) return <Navigate to="/login" replace />;
+  const token = useAuthStore((s) => s.token);
+  if (!user || !token || isTokenExpired(token)) return <Navigate to="/login" replace />;
   if (user.role !== 'Driver') return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }

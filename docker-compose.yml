@@ -42,10 +42,6 @@ services:
       - Seed__TenantAdminEmail=${SEED_TENANT_ADMIN_EMAIL}
       - Seed__TenantAdminPassword=${SEED_TENANT_ADMIN_PASSWORD}
 
-    depends_on:
-      db:
-        condition: service_healthy
-
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -78,37 +74,6 @@ services:
 
     networks:
       - fleetos_network
-
-  # ─────────────────────────────────────────────────────────────────
-  # PostgreSQL
-  # ─────────────────────────────────────────────────────────────────
-  db:
-    image: postgres:16-alpine
-
-    container_name: fleetos_db
-
-    restart: unless-stopped
-
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB:-fleetos}
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-
-    ports:
-      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
-
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-    networks:
-      - fleetos_network
-
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-fleetos}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
 
   # ─────────────────────────────────────────────────────────────────
   # Redis
@@ -169,9 +134,6 @@ networks:
     driver: bridge
 
 volumes:
-
-  postgres_data:
-    driver: local
 
   redis_data:
     driver: local

@@ -31,4 +31,7 @@ public interface IFleetNotificationService
     
     // Inventory
     Task NotifyStockUpdatedAsync(CancellationToken cancellationToken = default);
+    
+    // Notifications
+    Task NotifyNotificationCreatedAsync(CancellationToken cancellationToken = default);
 }

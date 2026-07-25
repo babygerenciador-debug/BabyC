@@ -7,6 +7,7 @@
 .env.local
 .env.*.local
 *.env
+backend/src/FleetOS.Api/appsettings.Development.json
 
 # ---- .NET / C# ----
 # Build outputs

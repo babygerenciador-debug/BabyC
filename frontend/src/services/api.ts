@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/useAuthStore';
 
 const API_BASE_URL = (() => {
   const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl) return envUrl.replace(/\/$/, '');
+  if (envUrl) return `${envUrl.replace(/\/$/, '')}/api/v1`;
   if (typeof window !== 'undefined') {
     const proto = window.location.protocol;
     const host = window.location.hostname;

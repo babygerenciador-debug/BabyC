@@ -20,6 +20,11 @@ interface DriverDto {
   assignedVehicle?: string;
 }
 
+function maskCnh(cnh: string): string {
+  if (!cnh || cnh.length < 6) return cnh;
+  return `***.${cnh.slice(-6, -4)}**-**`;
+}
+
 export default function DriverList() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,7 +90,7 @@ const handleToggleStatus = async (id: string, isAvailable: boolean) => {
                 <tr key={driver.id}>
                   <td style={{ fontWeight: 500 }}>{driver.name}</td>
                   <td>{driver.email}</td>
-                  <td>{driver.cnhNumber}</td>
+                  <td title={driver.cnhNumber}>{maskCnh(driver.cnhNumber)}</td>
                   <td>{driver.cnhCategory}</td>
                   <td>{new Date(driver.cnhExpirationDate).toLocaleDateString('pt-BR')}</td>
                   <td>{driver.assignedVehicle || '-'}</td>

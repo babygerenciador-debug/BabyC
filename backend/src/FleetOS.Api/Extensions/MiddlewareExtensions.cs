@@ -32,9 +32,10 @@ public static class MiddlewareExtensions
                 var tenantIdClaim = context.User.FindFirst("tenant_id");
                 if (tenantIdClaim != null && Guid.TryParse(tenantIdClaim.Value, out var tenantId))
                 {
-                    // For Global Query Filters
                     var dbContext = context.RequestServices.GetRequiredService<FleetOS.Infrastructure.Persistence.FleetOsDbContext>();
-                    dbContext.SetTenantId(tenantId);
+                    var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    Guid.TryParse(userIdClaim, out var userId);
+                    dbContext.SetTenantId(tenantId, userId);
                 }
             }
             await next();

@@ -1,6 +1,7 @@
 using FleetOS.Shared.Results;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Npgsql;
 
 namespace FleetOS.Api.Middleware;
 
@@ -27,13 +28,14 @@ public sealed class GlobalExceptionHandlerMiddleware(
 
         var (statusCode, title) = exception switch
         {
-            ArgumentNullException     => (StatusCodes.Status400BadRequest,  "Bad Request"),
-            ArgumentException         => (StatusCodes.Status400BadRequest,  "Bad Request"),
-            KeyNotFoundException      => (StatusCodes.Status404NotFound,    "Not Found"),
-            UnauthorizedAccessException => (StatusCodes.Status403Forbidden, "Forbidden"),
-            InvalidOperationException => (StatusCodes.Status409Conflict,    "Conflict"),
-            OperationCanceledException => (StatusCodes.Status408RequestTimeout, "Request Timeout"),
-            _                         => (StatusCodes.Status500InternalServerError, "Internal Server Error"),
+            ArgumentNullException       => (StatusCodes.Status400BadRequest,  "Bad Request"),
+            ArgumentException           => (StatusCodes.Status400BadRequest,  "Bad Request"),
+            KeyNotFoundException        => (StatusCodes.Status404NotFound,    "Not Found"),
+            UnauthorizedAccessException => (StatusCodes.Status403Forbidden,   "Forbidden"),
+            InvalidOperationException   => (StatusCodes.Status409Conflict,    "Conflict"),
+            OperationCanceledException  => (StatusCodes.Status408RequestTimeout, "Request Timeout"),
+            NpgsqlException             => (StatusCodes.Status500InternalServerError, "Database Error"),
+            _                           => (StatusCodes.Status500InternalServerError, "Internal Server Error"),
         };
 
         var isDevelopment = httpContext.RequestServices
