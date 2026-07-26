@@ -161,6 +161,9 @@ function getOrCreateConnection(token: string): signalR.HubConnection {
   connection = new signalR.HubConnectionBuilder()
     .withUrl(HUB_URL, {
       accessTokenFactory: () => token,
+      transport: signalR.HttpTransportType.WebSockets
+               | signalR.HttpTransportType.ServerSentEvents
+               | signalR.HttpTransportType.LongPolling,
     })
     .withAutomaticReconnect({
       nextRetryDelayInMilliseconds: (retryContext) => {

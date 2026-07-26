@@ -70,18 +70,25 @@ try
         app.UseHttpsRedirection();
     }
     app.UseCors("AllowedOrigins");
-    app.UseStaticFiles(); // Added for receipt uploads
+    app.UseWebSockets(new WebSocketOptions
+    {
+        KeepAliveInterval = TimeSpan.FromSeconds(30)
+    });
+
+    // SignalR and health must be before rate limiter to avoid WS upgrade being blocked
+    app.MapHub<FleetHub>("/hubs/fleet");
+    app.MapHealthChecks("/health");
+
     app.UseRateLimiter();
     app.UseAuthentication();
     app.UseAuthorization();
+    app.UseStaticFiles(); // Added for receipt uploads
 
     app.UseCorrelationId();
     app.UseTenantResolver();
     app.UseGlobalExceptionHandler();
 
     app.MapControllers();
-    app.MapHub<FleetHub>("/hubs/fleet");
-    app.MapHealthChecks("/health");
 
     await app.MigrateAndSeedAsync();
 
