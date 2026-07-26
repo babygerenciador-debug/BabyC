@@ -46,7 +46,6 @@ public static class InfrastructureServiceExtensions
 
         // ── Interceptors / Scoped services ────────────────────────────
         services.AddScoped<AuditInterceptor>();
-        services.AddScoped<RlsSessionInterceptor>();
         services.RegisterIdentityServices();
         services.RegisterInfrastructureServices();
 
