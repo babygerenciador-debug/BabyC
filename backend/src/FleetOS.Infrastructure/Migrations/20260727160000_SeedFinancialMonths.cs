@@ -85,18 +85,37 @@ namespace FleetOS.Infrastructure.Migrations
                 WHERE ft."financial_month_id" IS NULL
             """);
 
-            // Make the column NOT NULL now that all rows have a value
+            // Make the column NOT NULL only if it's still nullable (avoids ownership check)
             migrationBuilder.Sql("""
-                ALTER TABLE "FinancialTransactions" ALTER COLUMN "financial_month_id" SET NOT NULL
+                DO $$
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'FinancialTransactions'
+                        AND column_name = 'financial_month_id'
+                        AND is_nullable = 'YES'
+                    ) THEN
+                        ALTER TABLE "FinancialTransactions" ALTER COLUMN "financial_month_id" SET NOT NULL;
+                    END IF;
+                END $$;
             """);
 
-            // PostgreSQL supports CREATE INDEX IF NOT EXISTS natively
+            // Create index only if it doesn't exist (avoids ownership check)
             migrationBuilder.Sql("""
-                CREATE INDEX IF NOT EXISTS "ix_financial_transactions_financial_month_id"
-                ON "FinancialTransactions" ("financial_month_id")
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM pg_indexes
+                        WHERE tablename = 'FinancialTransactions'
+                        AND indexname = 'ix_financial_transactions_financial_month_id'
+                    ) THEN
+                        CREATE INDEX "ix_financial_transactions_financial_month_id"
+                        ON "FinancialTransactions" ("financial_month_id");
+                    END IF;
+                END $$;
             """);
 
-            // Only the FK constraint still needs a DO block for idempotency
+            // Add FK only if it doesn't exist (avoids ownership check)
             migrationBuilder.Sql("""
                 DO $$
                 BEGIN
