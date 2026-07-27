@@ -59,16 +59,19 @@ namespace FleetOS.Infrastructure.Migrations
                 )
             """);
 
-            // Add column using AddColumn<T> – EF Core generates the same ALTER TABLE
-            // but is compatible with the migration execution pipeline.
-            // The database user MUST own the table for this to work.
-            // If this fails with 42501, run in Supabase SQL Editor:
-            //   ALTER TABLE "FinancialTransactions" OWNER TO "fleetos_api";
-            migrationBuilder.AddColumn<Guid?>(
-                name: "financial_month_id",
-                table: "FinancialTransactions",
-                type: "uuid",
-                nullable: true);
+            // Add financial_month_id column if it doesn't exist (idempotent check)
+            migrationBuilder.Sql("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'FinancialTransactions'
+                        AND column_name = 'financial_month_id'
+                    ) THEN
+                        ALTER TABLE "FinancialTransactions" ADD COLUMN "financial_month_id" uuid NULL;
+                    END IF;
+                END $$;
+            """);
 
             // Update existing transactions to link to their tenant's current month
             migrationBuilder.Sql("""
