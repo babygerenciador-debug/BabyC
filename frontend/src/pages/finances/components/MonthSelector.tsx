@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../../services/api';
-import { Calendar, Plus, Lock, Unlock } from 'lucide-react';
+import { Calendar, Plus, Lock, Unlock, Play } from 'lucide-react';
 import { useState } from 'react';
 import OpenMonthModal from './OpenMonthModal';
 import CloseMonthModal from './CloseMonthModal';
@@ -21,9 +21,19 @@ interface Props {
   onSelectMonth: (id: string) => void;
 }
 
+function statusLabel(status: string): string {
+  switch (status) {
+    case 'open': return 'Aberto';
+    case 'closed': return 'Fechado';
+    case 'closed_with_report': return 'Encerrado';
+    default: return status;
+  }
+}
+
 export default function MonthSelector({ selectedMonthId, onSelectMonth }: Props) {
   const [showOpenModal, setShowOpenModal] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: months } = useQuery<FinancialMonthDto[]>({
     queryKey: ['financial-months'],
@@ -33,7 +43,16 @@ export default function MonthSelector({ selectedMonthId, onSelectMonth }: Props)
     },
   });
 
+  const activateMutation = useMutation({
+    mutationFn: (id: string) => api.post(`/finance/months/${id}/activate`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['financial-months'] });
+      queryClient.invalidateQueries({ queryKey: ['cash-flow-summary'] });
+    },
+  });
+
   const openMonth = months?.find(m => m.status === 'open');
+  const closedMonth = months?.find(m => m.status === 'closed');
   const selectedMonth = months?.find(m => m.id === selectedMonthId);
 
   return (
@@ -47,14 +66,26 @@ export default function MonthSelector({ selectedMonthId, onSelectMonth }: Props)
         >
           {months?.map(m => (
             <option key={m.id} value={m.id}>
-              {m.label} {m.status === 'open' ? '(Aberto)' : '(Fechado)'}
+              {m.label} ({statusLabel(m.status)})
             </option>
           ))}
         </select>
 
-        {!openMonth && (
+        {!openMonth && !closedMonth && (
           <button className="btn-primary" onClick={() => setShowOpenModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <Plus size={16} />
+            Criar Mês
+          </button>
+        )}
+
+        {closedMonth && !openMonth && (
+          <button
+            className="btn-primary"
+            onClick={() => activateMutation.mutate(closedMonth.id)}
+            disabled={activateMutation.isPending}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+          >
+            <Play size={16} />
             Abrir Mês
           </button>
         )}

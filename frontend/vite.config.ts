@@ -31,6 +31,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/hubs': {
+        target: process.env.VITE_API_URL || 'http://localhost:5000',
+        ws: true,
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   build: {

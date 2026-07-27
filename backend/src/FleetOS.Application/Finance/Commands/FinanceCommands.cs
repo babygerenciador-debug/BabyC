@@ -12,6 +12,7 @@ public sealed record UpdateFinancialCategoryCommand(Guid Id, string Name) : IReq
 public sealed record DeleteFinancialCategoryCommand(Guid Id) : IRequest<Result>;
 
 public sealed record OpenFinancialMonthCommand(int Year, int Month, decimal OwnerSalary) : IRequest<Result<Guid>>;
+public sealed record ActivateFinancialMonthCommand(Guid Id) : IRequest<Result>;
 public sealed record CloseFinancialMonthCommand(Guid Id) : IRequest<Result>;
 
 public sealed record RegisterTransactionCommand(

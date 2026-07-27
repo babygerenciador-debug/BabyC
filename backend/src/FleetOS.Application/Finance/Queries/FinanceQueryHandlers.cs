@@ -94,7 +94,7 @@ internal sealed class GetFinancialMonthsQueryHandler : IRequestHandler<GetFinanc
         var months = await _repository.GetAllOrderedDescAsync(cancellationToken);
         var dtos = months.Select(m => new FinancialMonthDto(
             m.Id, m.Year, m.MonthNumber, m.Label, m.OwnerSalary,
-            m.Status == MonthStatus.Open ? "open" : "closed",
+            m.Status == MonthStatus.Open ? "open" : m.Status == MonthStatus.ClosedWithReport ? "closed_with_report" : "closed",
             m.OpenedAt, m.ClosedAt, m.CreatedAt)).ToList();
         return Result.Success<IReadOnlyList<FinancialMonthDto>>(dtos);
     }

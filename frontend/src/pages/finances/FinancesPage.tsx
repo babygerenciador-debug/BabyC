@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LineChart, Receipt, Settings, Droplets, FileText, Calendar } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../services/api';
 import './FinancesPage.css';
 import CashFlowDashboard from './components/CashFlowDashboard';
 import TransactionsList from './components/TransactionsList';
@@ -10,9 +12,32 @@ import MonthlyReport from './components/MonthlyReport';
 
 type Tab = 'dashboard' | 'transactions' | 'settings' | 'fuel' | 'report';
 
+interface FinancialMonthDto {
+  id: string;
+  year: number;
+  monthNumber: number;
+  label: string;
+  status: string;
+}
+
 export default function FinancesPage() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [selectedMonthId, setSelectedMonthId] = useState<string | null>(null);
+
+  const { data: months } = useQuery<FinancialMonthDto[]>({
+    queryKey: ['financial-months'],
+    queryFn: async () => {
+      const res = await api.get('/finance/months');
+      return res.data;
+    },
+  });
+
+  useEffect(() => {
+    if (activeTab === 'report' && !selectedMonthId && months && months.length > 0) {
+      const reportMonth = months.find(m => m.status === 'closed_with_report') || months[0];
+      setSelectedMonthId(reportMonth.id);
+    }
+  }, [activeTab, months, selectedMonthId]);
 
   return (
     <div className="finances-container animate-fade-in">
@@ -63,20 +88,24 @@ export default function FinancesPage() {
         </div>
       </div>
 
-      {activeTab !== 'report' && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <MonthSelector
-            selectedMonthId={selectedMonthId}
-            onSelectMonth={setSelectedMonthId}
-          />
-        </div>
-      )}
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <MonthSelector
+          selectedMonthId={selectedMonthId}
+          onSelectMonth={setSelectedMonthId}
+        />
+      </div>
 
       <div className="tab-content">
         {activeTab === 'dashboard' && <CashFlowDashboard />}
         {activeTab === 'transactions' && <TransactionsList />}
-        {activeTab === 'report' && (
-          <MonthlyReport monthId={selectedMonthId || 'none'} />
+        {activeTab === 'report' && selectedMonthId && (
+          <MonthlyReport monthId={selectedMonthId} />
+        )}
+        {activeTab === 'report' && !selectedMonthId && (
+          <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-secondary)' }}>
+            <FileText size={48} style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
+            <p>Selecione um mês no seletor acima para visualizar o relatório</p>
+          </div>
         )}
         {activeTab === 'settings' && <FinanceSettings />}
         {activeTab === 'fuel' && <FuelReport />}

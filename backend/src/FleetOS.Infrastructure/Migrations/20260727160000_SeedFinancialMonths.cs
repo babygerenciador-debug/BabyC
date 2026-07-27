@@ -44,7 +44,7 @@ namespace FleetOS.Infrastructure.Migrations
                     EXTRACT(YEAR FROM NOW())::int,
                     EXTRACT(MONTH FROM NOW())::int,
                     COALESCE(t."owner_salary", 0),
-                    1,  -- MonthStatus.Open = 1
+                    0,  -- MonthStatus.Closed = 0
                     NOW(),
                     t."id",
                     COALESCE(o."id", '00000000-0000-0000-0000-000000000000'),

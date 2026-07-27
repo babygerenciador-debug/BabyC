@@ -22,6 +22,13 @@ public sealed class MonthsController : BaseController
             : BadRequest(result.Error);
     }
 
+    [HttpPost("{id:guid}/activate")]
+    public async Task<IActionResult> ActivateMonth(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new ActivateFinancialMonthCommand(id), cancellationToken);
+        return result.IsSuccess ? NoContent() : BadRequest(result.Error);
+    }
+
     [HttpPost("{id:guid}/close")]
     public async Task<IActionResult> CloseMonth(Guid id, CancellationToken cancellationToken)
     {

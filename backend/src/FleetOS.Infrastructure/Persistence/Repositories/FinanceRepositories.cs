@@ -115,7 +115,7 @@ internal sealed class FinancialMonthRepository : IFinancialMonthRepository
 
         var monthDto = new FinancialMonthDto(
             month.Id, month.Year, month.MonthNumber, month.Label, month.OwnerSalary,
-            month.Status == MonthStatus.Open ? "open" : "closed",
+            month.Status == MonthStatus.Open ? "open" : month.Status == MonthStatus.ClosedWithReport ? "closed_with_report" : "closed",
             month.OpenedAt, month.ClosedAt, month.CreatedAt);
 
         var transactions = await _dbContext.Set<FinancialTransaction>()

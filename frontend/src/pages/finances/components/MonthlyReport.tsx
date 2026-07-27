@@ -111,7 +111,7 @@ export default function MonthlyReport({ monthId }: Props) {
           <h1 style={{ fontSize: '1.5rem', margin: 0, color: '#1a1a1a' }}>Baby Turismo</h1>
           <p style={{ color: '#6b7280', margin: '0.25rem 0 0' }}>Relatório Financeiro — {data.month.label}</p>
           <p style={{ color: '#6b7280', fontSize: '0.85rem', margin: '0.25rem 0 0' }}>
-            Status: {data.month.status === 'open' ? 'Aberto' : 'Fechado'}
+            Status: {data.month.status === 'open' ? 'Aberto' : data.month.status === 'closed_with_report' ? 'Encerrado' : 'Fechado'}
             {data.month.closedAt ? ` — Fechado em ${format(new Date(data.month.closedAt), 'dd/MM/yyyy HH:mm')}` : ''}
           </p>
         </div>

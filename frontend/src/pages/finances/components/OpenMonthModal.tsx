@@ -48,14 +48,14 @@ export default function OpenMonthModal({ onClose }: Props) {
     <BaseModal
       open
       onClose={onClose}
-      title="Abrir Novo Mês Financeiro"
+      title="Criar Novo Mês Financeiro"
       maxWidth="450px"
       footer={
         <div className="modal-footer">
           <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
           <button type="submit" form={FORM_ID} className="btn-primary" disabled={mutation.isPending}>
             {mutation.isPending ? <Loader2 className="spinner" size={18} /> : <Save size={18} />}
-            <span>{mutation.isPending ? 'Abrindo...' : 'Abrir Mês'}</span>
+            <span>{mutation.isPending ? 'Criando...' : 'Criar Mês'}</span>
           </button>
         </div>
       }

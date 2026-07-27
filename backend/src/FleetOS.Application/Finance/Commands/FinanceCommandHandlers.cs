@@ -98,6 +98,44 @@ internal sealed class OpenFinancialMonthCommandHandler : IRequestHandler<OpenFin
     }
 }
 
+internal sealed class ActivateFinancialMonthCommandHandler : IRequestHandler<ActivateFinancialMonthCommand, Result>
+{
+    private readonly IFinancialMonthRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
+
+    public ActivateFinancialMonthCommandHandler(IFinancialMonthRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext, IFleetNotificationService notificationService)
+    {
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+        _tenantContext = tenantContext;
+        _notificationService = notificationService;
+    }
+
+    public async Task<Result> Handle(ActivateFinancialMonthCommand request, CancellationToken cancellationToken)
+    {
+        var existing = await _repository.GetOpenMonthAsync(cancellationToken);
+        if (existing is not null)
+            return Result.Failure(Error.Validation("Month.AlreadyOpen", "There is already an open month. Close it before opening a new one."));
+
+        var month = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        if (month is null)
+            return Result.Failure(Error.NotFound("Month.NotFound", "Financial month not found."));
+
+        if (month.OwnerSalary <= 0)
+            return Result.Failure(Error.Validation("Month.NoSalary", "Set the owner salary before opening the month."));
+
+        month.Activate();
+        _repository.Update(month);
+        await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+
+        await _notificationService.NotifyDashboardUpdateAsync(cancellationToken);
+
+        return Result.Success();
+    }
+}
+
 internal sealed class CloseFinancialMonthCommandHandler : IRequestHandler<CloseFinancialMonthCommand, Result>
 {
     private readonly IFinancialMonthRepository _repository;

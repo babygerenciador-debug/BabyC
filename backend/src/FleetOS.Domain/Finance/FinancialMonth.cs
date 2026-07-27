@@ -19,7 +19,7 @@ public sealed class FinancialMonth : AggregateRoot
         Year = year;
         MonthNumber = monthNumber;
         OwnerSalary = ownerSalary;
-        Status = MonthStatus.Open;
+        Status = MonthStatus.Closed;
         OpenedAt = DateTimeOffset.UtcNow;
     }
 
@@ -50,12 +50,25 @@ public sealed class FinancialMonth : AggregateRoot
             year, monthNumber, ownerSalary);
     }
 
+    public void Activate()
+    {
+        if (Status == MonthStatus.Open)
+            throw new InvalidOperationException("Month is already open.");
+
+        if (Status == MonthStatus.ClosedWithReport)
+            throw new InvalidOperationException("Cannot activate a month with a finalized report.");
+
+        Status = MonthStatus.Open;
+        OpenedAt = DateTimeOffset.UtcNow;
+        UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
     public void Close()
     {
-        if (Status == MonthStatus.Closed)
-            throw new InvalidOperationException("Month is already closed.");
+        if (Status == MonthStatus.ClosedWithReport)
+            throw new InvalidOperationException("Month is already closed with a report.");
 
-        Status = MonthStatus.Closed;
+        Status = MonthStatus.ClosedWithReport;
         ClosedAt = DateTimeOffset.UtcNow;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
@@ -74,6 +87,7 @@ public sealed class FinancialMonth : AggregateRoot
 
 public enum MonthStatus
 {
+    Closed = 0,
     Open = 1,
-    Closed = 2
+    ClosedWithReport = 2
 }
