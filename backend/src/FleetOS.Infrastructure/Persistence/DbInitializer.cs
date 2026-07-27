@@ -106,11 +106,16 @@ public static class DbInitializer
                 logger.LogInformation("Database seeded successfully.");
             }
 
-            // Always seed initial month if none exists
+            // Seed initial month if none exists (migration seeds it too, but this
+            // handles the case where migration ran without the seed or for new tenants)
             var babyTenantForMonth = await context.Tenants.FirstOrDefaultAsync(t => t.Slug == "babyturismo");
             if (babyTenantForMonth != null)
             {
-                if (!await context.Set<FinancialMonth>().AnyAsync(m => m.TenantId == babyTenantForMonth.Id))
+                // Must IgnoreQueryFilters because _currentTenantId is Guid.Empty at this point,
+                // which would filter out all tenant data with the global tenant filter.
+                if (!await context.Set<FinancialMonth>()
+                    .IgnoreQueryFilters()
+                    .AnyAsync(m => m.TenantId == babyTenantForMonth.Id && m.DeletedAt == null))
                 {
                     var org = await context.Organizations.FirstOrDefaultAsync(o => o.TenantId == babyTenantForMonth.Id);
                     var bu = await context.BusinessUnits.FirstOrDefaultAsync(b => b.TenantId == babyTenantForMonth.Id);
