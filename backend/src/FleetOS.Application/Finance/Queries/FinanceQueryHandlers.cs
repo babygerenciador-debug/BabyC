@@ -159,23 +159,23 @@ internal sealed class GetTransactionsQueryHandler : IRequestHandler<GetTransacti
 internal sealed class GetCashFlowSummaryQueryHandler : IRequestHandler<GetCashFlowSummaryQuery, Result<CashFlowSummaryDto>>
 {
     private readonly IFinancialTransactionRepository _repository;
+    private readonly IFinancialMonthRepository _monthRepository;
     private readonly ITenantContext _tenantContext;
-    private readonly ITenantRepository _tenantRepository;
 
     public GetCashFlowSummaryQueryHandler(
         IFinancialTransactionRepository repository,
-        ITenantContext tenantContext,
-        ITenantRepository tenantRepository)
+        IFinancialMonthRepository monthRepository,
+        ITenantContext tenantContext)
     {
         _repository = repository;
+        _monthRepository = monthRepository;
         _tenantContext = tenantContext;
-        _tenantRepository = tenantRepository;
     }
 
     public async Task<Result<CashFlowSummaryDto>> Handle(GetCashFlowSummaryQuery request, CancellationToken cancellationToken)
     {
-        var tenant = await _tenantRepository.GetByIdAsync(_tenantContext.TenantId, cancellationToken);
-        var ownerSalary = tenant?.OwnerSalary ?? 0;
+        var openMonth = await _monthRepository.GetOpenMonthAsync(cancellationToken);
+        var ownerSalary = openMonth?.OwnerSalary ?? 0;
 
         var result = await _repository.GetCashFlowSummaryAsync(request.StartDate, request.EndDate, ownerSalary, cancellationToken);
         return Result.Success(result);
