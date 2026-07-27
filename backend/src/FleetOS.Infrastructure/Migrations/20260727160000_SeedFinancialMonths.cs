@@ -1,10 +1,15 @@
 using System;
+using FleetOS.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace FleetOS.Infrastructure.Migrations
 {
+    [DbContext(typeof(FleetOsDbContext))]
+    [Migration("20260727160000_SeedFinancialMonths")]
     public partial class SeedFinancialMonths : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

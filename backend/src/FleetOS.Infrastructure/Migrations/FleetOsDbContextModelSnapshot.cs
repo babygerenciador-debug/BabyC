@@ -796,6 +796,84 @@ namespace FleetOS.Infrastructure.Migrations
                     b.ToTable("FinancialCategories", (string)null);
                 });
 
+            modelBuilder.Entity("FleetOS.Domain.Finance.FinancialMonth", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BusinessUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("business_unit_id");
+
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("closed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<int>("MonthNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("month_number");
+
+                    b.Property<DateTimeOffset>("OpenedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("opened_at");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<decimal>("OwnerSalary")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("owner_salary");
+
+                    b.Property<long>("RowVersion")
+                        .HasColumnType("bigint")
+                        .HasColumnName("row_version");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer")
+                        .HasColumnName("year");
+
+                    b.HasKey("Id")
+                        .HasName("pk_financial_months");
+
+                    b.ToTable("FinancialMonths", (string)null);
+                });
+
             modelBuilder.Entity("FleetOS.Domain.Finance.FinancialTransaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -846,6 +924,10 @@ namespace FleetOS.Infrastructure.Migrations
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("description");
 
+                    b.Property<Guid>("FinancialMonthId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("financial_month_id");
+
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
@@ -890,6 +972,9 @@ namespace FleetOS.Infrastructure.Migrations
 
                     b.HasIndex("CostCenterId")
                         .HasDatabaseName("ix_financial_transactions_cost_center_id");
+
+                    b.HasIndex("FinancialMonthId")
+                        .HasDatabaseName("ix_financial_transactions_financial_month_id");
 
                     b.ToTable("FinancialTransactions", (string)null);
                 });
@@ -2175,6 +2260,13 @@ namespace FleetOS.Infrastructure.Migrations
                         .HasForeignKey("CostCenterId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_financial_transactions_cost_centers_cost_center_id");
+
+                    b.HasOne("FleetOS.Domain.Finance.FinancialMonth", null)
+                        .WithMany("Transactions")
+                        .HasForeignKey("FinancialMonthId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_financial_transactions_financial_months_financial_month_id");
                 });
 
             modelBuilder.Entity("FleetOS.Domain.Fleet.Fuel.FuelLog", b =>
@@ -2332,6 +2424,11 @@ namespace FleetOS.Infrastructure.Migrations
             modelBuilder.Entity("FleetOS.Domain.Fleet.Vehicles.Vehicle", b =>
                 {
                     b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("FleetOS.Domain.Finance.FinancialMonth", b =>
+                {
+                    b.Navigation("Transactions");
                 });
 
             modelBuilder.Entity("FleetOS.Domain.Operations.Checklists.DailyChecklist", b =>
