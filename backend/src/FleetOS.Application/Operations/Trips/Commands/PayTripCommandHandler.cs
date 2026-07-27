@@ -11,6 +11,7 @@ internal sealed class PayTripCommandHandler : IRequestHandler<PayTripCommand, Re
     private readonly ITripRepository _tripRepository;
     private readonly IFinancialTransactionRepository _transactionRepository;
     private readonly IFinancialCategoryRepository _categoryRepository;
+    private readonly IFinancialMonthRepository _monthRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
     private readonly IFleetNotificationService _notificationService;
@@ -19,6 +20,7 @@ internal sealed class PayTripCommandHandler : IRequestHandler<PayTripCommand, Re
         ITripRepository tripRepository,
         IFinancialTransactionRepository transactionRepository,
         IFinancialCategoryRepository categoryRepository,
+        IFinancialMonthRepository monthRepository,
         IUnitOfWork unitOfWork,
         ITenantContext tenantContext,
         IFleetNotificationService notificationService)
@@ -26,6 +28,7 @@ internal sealed class PayTripCommandHandler : IRequestHandler<PayTripCommand, Re
         _tripRepository = tripRepository;
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;
+        _monthRepository = monthRepository;
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
         _notificationService = notificationService;
@@ -64,12 +67,16 @@ internal sealed class PayTripCommandHandler : IRequestHandler<PayTripCommand, Re
 
             if (revenueCategory is not null)
             {
+                var openMonth = await _monthRepository.GetOpenMonthAsync(cancellationToken);
+                if (openMonth is null) return Result.Failure(Error.Validation("Month.NoOpenMonth", "No open financial month."));
+
                 var transaction = FinancialTransaction.Create(
                     _tenantContext.TenantId,
                     _tenantContext.OrganizationId,
                     _tenantContext.BusinessUnitId,
                     revenueCategory.Id,
                     null,
+                    openMonth.Id,
                     TransactionType.Revenue,
                     trip.TripValue,
                     trip.ActualEndDate ?? trip.ScheduledEndDate,

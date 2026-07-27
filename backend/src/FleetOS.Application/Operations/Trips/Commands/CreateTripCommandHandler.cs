@@ -14,6 +14,7 @@ internal sealed class CreateTripCommandHandler : IRequestHandler<CreateTripComma
     private readonly IVehicleRepository _vehicleRepository;
     private readonly IFinancialTransactionRepository _transactionRepository;
     private readonly IFinancialCategoryRepository _categoryRepository;
+    private readonly IFinancialMonthRepository _monthRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
     private readonly IFleetNotificationService _notificationService;
@@ -24,6 +25,7 @@ internal sealed class CreateTripCommandHandler : IRequestHandler<CreateTripComma
         IVehicleRepository vehicleRepository,
         IFinancialTransactionRepository transactionRepository,
         IFinancialCategoryRepository categoryRepository,
+        IFinancialMonthRepository monthRepository,
         IUnitOfWork unitOfWork,
         ITenantContext tenantContext,
         IFleetNotificationService notificationService)
@@ -33,6 +35,7 @@ internal sealed class CreateTripCommandHandler : IRequestHandler<CreateTripComma
         _vehicleRepository = vehicleRepository;
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;
+        _monthRepository = monthRepository;
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
         _notificationService = notificationService;
@@ -70,6 +73,9 @@ internal sealed class CreateTripCommandHandler : IRequestHandler<CreateTripComma
         // Se a viagem já foi paga, criar transação financeira automaticamente
         if (request.PaymentStatus == PaymentStatus.Paid && request.TripValue > 0)
         {
+            var openMonth = await _monthRepository.GetOpenMonthAsync(cancellationToken);
+            if (openMonth is null) return Result.Failure<Guid>(Error.Validation("Month.NoOpenMonth", "No open financial month. Open a month before registering paid trips."));
+
             var categories = await _categoryRepository.GetAllAsync(cancellationToken);
             var revenueCategory = categories.FirstOrDefault(c => c.Type == TransactionType.Revenue && c.Name.ToLower().Contains("viagem"));
 
@@ -96,6 +102,7 @@ internal sealed class CreateTripCommandHandler : IRequestHandler<CreateTripComma
                     _tenantContext.BusinessUnitId,
                     revenueCategory.Id,
                     null,
+                    openMonth.Id,
                     TransactionType.Revenue,
                     request.TripValue,
                     request.ScheduledEndDate,

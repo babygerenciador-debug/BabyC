@@ -18,6 +18,7 @@ internal sealed class UpdateIssueStatusCommandHandler : IRequestHandler<UpdateIs
     private readonly IVehicleIssueReportRepository _issueRepository;
     private readonly IFinancialTransactionRepository _transactionRepository;
     private readonly IFinancialCategoryRepository _categoryRepository;
+    private readonly IFinancialMonthRepository _monthRepository;
     private readonly ITenantContext _tenantContext;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -25,12 +26,14 @@ internal sealed class UpdateIssueStatusCommandHandler : IRequestHandler<UpdateIs
         IVehicleIssueReportRepository issueRepository,
         IFinancialTransactionRepository transactionRepository,
         IFinancialCategoryRepository categoryRepository,
+        IFinancialMonthRepository monthRepository,
         ITenantContext tenantContext,
         IUnitOfWork unitOfWork)
     {
         _issueRepository = issueRepository;
         _transactionRepository = transactionRepository;
         _categoryRepository = categoryRepository;
+        _monthRepository = monthRepository;
         _tenantContext = tenantContext;
         _unitOfWork = unitOfWork;
     }
@@ -61,9 +64,12 @@ internal sealed class UpdateIssueStatusCommandHandler : IRequestHandler<UpdateIs
                 await _categoryRepository.AddAsync(expenseCategory, cancellationToken);
             }
 
+            var openMonth = await _monthRepository.GetOpenMonthAsync(cancellationToken);
+            if (openMonth is null) return Result.Failure(Error.Validation("Month.NoOpenMonth", "No open financial month."));
+
             var txResult = FinancialTransaction.Create(
                 _tenantContext.TenantId, _tenantContext.OrganizationId, _tenantContext.BusinessUnitId,
-                expenseCategory.Id, null, TransactionType.Expense,
+                expenseCategory.Id, null, openMonth.Id, TransactionType.Expense,
                 request.ExpenseAmount.Value, DateTime.UtcNow, request.ExpenseDescription,
                 issue.Id);
             if (txResult.IsFailure)
