@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FleetOS.Api.Features.Finance;
 
 [Authorize(Roles = "SystemAdmin,TenantAdmin,Manager")]
-[Route("api/v1/finance/months")]
+[Route("api/v1/finance/[controller]")]
 public sealed class MonthsController : BaseController
 {
     [HttpPost("open")]
