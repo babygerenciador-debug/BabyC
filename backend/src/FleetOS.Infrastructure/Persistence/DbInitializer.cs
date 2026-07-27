@@ -1,6 +1,7 @@
 using FleetOS.Application.Common.Interfaces;
 using FleetOS.Domain.Core.Tenants;
 using FleetOS.Domain.Core.Users;
+using FleetOS.Domain.Finance;
 using FleetOS.Domain.Common.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -95,15 +96,36 @@ public static class DbInitializer
                 await context.Users.AddRangeAsync(sysAdmin, babyAdmin);
                 await context.SaveChangesAsync();
 
+                // 7. Seed initial FinancialMonth for Baby Turismo
+                var now = DateTime.UtcNow;
+                var initialMonth = FinancialMonth.Open(
+                    babyTenant.Id, babyOrg.Id, babyBu.Id,
+                    now.Year, now.Month, babyTenant.OwnerSalary);
+                await context.Set<FinancialMonth>().AddAsync(initialMonth);
+
                 logger.LogInformation("Database seeded successfully.");
             }
 
-            // Always seed additional users (idempotent — skips if already exists)
-            var existingTenant = await context.Tenants.FirstOrDefaultAsync(t => t.Slug == "babyturismo");
-            if (existingTenant != null)
+            // Always seed initial month if none exists
+            var babyTenantForMonth = await context.Tenants.FirstOrDefaultAsync(t => t.Slug == "babyturismo");
+            if (babyTenantForMonth != null)
             {
-                context.SetTenantId(existingTenant.Id);
+                if (!await context.Set<FinancialMonth>().AnyAsync(m => m.TenantId == babyTenantForMonth.Id))
+                {
+                    var org = await context.Organizations.FirstOrDefaultAsync(o => o.TenantId == babyTenantForMonth.Id);
+                    var bu = await context.BusinessUnits.FirstOrDefaultAsync(b => b.TenantId == babyTenantForMonth.Id);
+                    var now2 = DateTime.UtcNow;
+                    var month = FinancialMonth.Open(
+                        babyTenantForMonth.Id, org?.Id ?? Guid.Empty, bu?.Id ?? Guid.Empty,
+                        now2.Year, now2.Month, babyTenantForMonth.OwnerSalary);
+                    await context.Set<FinancialMonth>().AddAsync(month);
+                    await context.SaveChangesAsync();
+                    logger.LogInformation("Initial FinancialMonth seeded for tenant {Slug}.", babyTenantForMonth.Slug);
+                }
+
+                context.SetTenantId(babyTenantForMonth.Id);
             }
+
             await SeedAdditionalUsersAsync(context, passwordService, logger, configuration);
         }
         catch (Exception ex)

@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '../../../services/api';
-import { DollarSign, TrendingUp, TrendingDown, Landmark, Save, Wallet, Loader2 } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Landmark, Wallet } from 'lucide-react';
 import './CashFlowDashboard.css';
 
 interface CashFlowSummaryDto {
@@ -14,57 +12,31 @@ interface CashFlowSummaryDto {
   netBalance: number;
 }
 
-interface FinanceSettingsDto {
+interface FinancialMonthDto {
+  id: string;
+  year: number;
+  monthNumber: number;
+  label: string;
   ownerSalary: number;
+  status: string;
 }
 
 export default function CashFlowDashboard() {
-  const queryClient = useQueryClient();
-
-  const { data: settings } = useQuery<FinanceSettingsDto>({
-    queryKey: ['finance-settings'],
+  const { data: openMonth } = useQuery<FinancialMonthDto>({
+    queryKey: ['open-financial-month'],
     queryFn: async () => {
-      const res = await api.get('/finance/settings');
+      const res = await api.get('/finance/months/open');
       return res.data;
     },
   });
 
-  const [ownerSalaryInput, setOwnerSalaryInput] = useState<string>('');
-
-  useEffect(() => {
-    if (settings && ownerSalaryInput === '' && settings.ownerSalary > 0) {
-      setOwnerSalaryInput(settings.ownerSalary.toString());
-    }
-  }, [settings, ownerSalaryInput]);
-
-  const updateSettings = useMutation({
-    mutationFn: (ownerSalary: number) =>
-      api.put('/finance/settings', { ownerSalary }),
-    onSuccess: () => {
-      toast.success('Salário atualizado com sucesso');
-      queryClient.invalidateQueries({ queryKey: ['finance-settings'] });
-      queryClient.invalidateQueries({ queryKey: ['cash-flow-summary'] });
-    },
-    onError: () => {
-      toast.error('Erro ao atualizar salário');
-    },
-  });
-
-  const handleSaveSalary = () => {
-    const num = Number(ownerSalaryInput);
-    if (!isNaN(num) && num >= 0) {
-      updateSettings.mutate(num);
-    }
-  };
-
   const { data, isLoading } = useQuery<CashFlowSummaryDto>({
-    queryKey: ['cash-flow-summary'],
+    queryKey: ['cash-flow-summary', openMonth?.id],
     queryFn: async () => {
       const res = await api.get('/finance/transactions/summary');
       return res.data;
     },
     refetchInterval: 30000,
-    enabled: !!settings,
   });
 
   const formatCurrency = (val: number) => {
@@ -73,28 +45,14 @@ export default function CashFlowDashboard() {
 
   return (
     <div className="cash-flow-container animate-fade-in">
-      <div className="salary-config-panel glass-panel">
-        <div className="salary-info">
-          <h3>Defina o Salário Base (Dono)</h3>
-          <p>Baseado na regra de negócio: O cálculo do Fluxo de Caixa será (Salário Bruto - 27% Impostos). O que sobrar soma-se às receitas e deduz-se as despesas.</p>
-        </div>
-        <div className="salary-input-group">
-          <div className="input-wrapper">
-            <DollarSign size={18} className="input-icon" />
-            <input 
-              type="number" 
-              step="0.01" 
-              placeholder="Ex: 10000.00" 
-              value={ownerSalaryInput}
-              onChange={(e) => setOwnerSalaryInput(e.target.value)}
-            />
+      {openMonth && (
+        <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Wallet size={20} style={{ color: 'var(--brand-color)' }} />
+          <div>
+            <strong>Mês Ativo:</strong> {openMonth.label} — Salário: {formatCurrency(openMonth.ownerSalary)}
           </div>
-          <button className="btn-primary" onClick={handleSaveSalary} disabled={updateSettings.isPending}>
-            {updateSettings.isPending ? <Loader2 className="spinner" size={18} /> : <Save size={18} />}
-            {updateSettings.isPending ? 'Salvando...' : 'Aplicar e Calcular'}
-          </button>
         </div>
-      </div>
+      )}
 
       {isLoading ? (
         <p>Calculando fluxo de caixa...</p>

@@ -35,6 +35,7 @@ export default function TransactionsList() {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['cash-flow-summary'] });
       queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['financial-month-report'] });
     }
   });
 
@@ -44,6 +45,7 @@ export default function TransactionsList() {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['cash-flow-summary'] });
       queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['financial-month-report'] });
     }
   });
 
@@ -53,6 +55,7 @@ export default function TransactionsList() {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['cash-flow-summary'] });
       queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['financial-month-report'] });
     }
   });
 

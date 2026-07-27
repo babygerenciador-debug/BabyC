@@ -30,6 +30,26 @@ internal sealed class FinancialCategoryConfiguration : IEntityTypeConfiguration<
     }
 }
 
+internal sealed class FinancialMonthConfiguration : IEntityTypeConfiguration<FinancialMonth>
+{
+    public void Configure(EntityTypeBuilder<FinancialMonth> builder)
+    {
+        builder.ToTable("FinancialMonths");
+        builder.HasKey(m => m.Id);
+
+        builder.Property(m => m.TenantId).IsRequired();
+        builder.Property(m => m.Year).IsRequired();
+        builder.Property(m => m.MonthNumber).IsRequired();
+        builder.Property(m => m.OwnerSalary).HasPrecision(18, 2).IsRequired();
+        builder.Property(m => m.Status).IsRequired();
+
+        builder.HasMany(m => m.Transactions)
+            .WithOne()
+            .HasForeignKey(t => t.FinancialMonthId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 internal sealed class FinancialTransactionConfiguration : IEntityTypeConfiguration<FinancialTransaction>
 {
     public void Configure(EntityTypeBuilder<FinancialTransaction> builder)
@@ -52,6 +72,11 @@ internal sealed class FinancialTransactionConfiguration : IEntityTypeConfigurati
         builder.HasOne<CostCenter>()
             .WithMany()
             .HasForeignKey(t => t.CostCenterId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<FinancialMonth>()
+            .WithMany(m => m.Transactions)
+            .HasForeignKey(t => t.FinancialMonthId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

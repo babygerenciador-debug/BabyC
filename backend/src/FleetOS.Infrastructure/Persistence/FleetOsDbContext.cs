@@ -62,6 +62,7 @@ public sealed class FleetOsDbContext : DbContext, IUnitOfWork
     // Finance
     public DbSet<FleetOS.Domain.Finance.CostCenter> CostCenters => Set<FleetOS.Domain.Finance.CostCenter>();
     public DbSet<FleetOS.Domain.Finance.FinancialCategory> FinancialCategories => Set<FleetOS.Domain.Finance.FinancialCategory>();
+    public DbSet<FleetOS.Domain.Finance.FinancialMonth> FinancialMonths => Set<FleetOS.Domain.Finance.FinancialMonth>();
     public DbSet<FleetOS.Domain.Finance.FinancialTransaction> FinancialTransactions => Set<FleetOS.Domain.Finance.FinancialTransaction>();
 
     // Notifications & Issues
@@ -130,6 +131,9 @@ public sealed class FleetOsDbContext : DbContext, IUnitOfWork
 
         modelBuilder.Entity<FleetOS.Domain.Finance.FinancialCategory>()
             .HasQueryFilter(c => c.DeletedAt == null && c.TenantId == _currentTenantId);
+
+        modelBuilder.Entity<FleetOS.Domain.Finance.FinancialMonth>()
+            .HasQueryFilter(m => m.DeletedAt == null && m.TenantId == _currentTenantId);
 
         modelBuilder.Entity<FleetOS.Domain.Finance.FinancialTransaction>()
             .HasQueryFilter(t => t.DeletedAt == null && t.TenantId == _currentTenantId);

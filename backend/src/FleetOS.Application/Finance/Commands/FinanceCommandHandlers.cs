@@ -64,6 +64,71 @@ internal sealed class CreateFinancialCategoryCommandHandler : IRequestHandler<Cr
     }
 }
 
+internal sealed class OpenFinancialMonthCommandHandler : IRequestHandler<OpenFinancialMonthCommand, Result<Guid>>
+{
+    private readonly IFinancialMonthRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
+
+    public OpenFinancialMonthCommandHandler(IFinancialMonthRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext, IFleetNotificationService notificationService)
+    {
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+        _tenantContext = tenantContext;
+        _notificationService = notificationService;
+    }
+
+    public async Task<Result<Guid>> Handle(OpenFinancialMonthCommand request, CancellationToken cancellationToken)
+    {
+        var existing = await _repository.GetOpenMonthAsync(cancellationToken);
+        if (existing is not null)
+            return Result.Failure<Guid>(Error.Validation("Month.AlreadyOpen", "There is already an open month. Close it before opening a new one."));
+
+        var month = FinancialMonth.Open(
+            _tenantContext.TenantId, _tenantContext.OrganizationId, _tenantContext.BusinessUnitId,
+            request.Year, request.Month, request.OwnerSalary);
+
+        await _repository.AddAsync(month, cancellationToken);
+        await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+
+        await _notificationService.NotifyDashboardUpdateAsync(cancellationToken);
+
+        return Result.Success(month.Id);
+    }
+}
+
+internal sealed class CloseFinancialMonthCommandHandler : IRequestHandler<CloseFinancialMonthCommand, Result>
+{
+    private readonly IFinancialMonthRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITenantContext _tenantContext;
+    private readonly IFleetNotificationService _notificationService;
+
+    public CloseFinancialMonthCommandHandler(IFinancialMonthRepository repository, IUnitOfWork unitOfWork, ITenantContext tenantContext, IFleetNotificationService notificationService)
+    {
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+        _tenantContext = tenantContext;
+        _notificationService = notificationService;
+    }
+
+    public async Task<Result> Handle(CloseFinancialMonthCommand request, CancellationToken cancellationToken)
+    {
+        var month = await _repository.GetByIdAsync(request.Id, cancellationToken);
+        if (month is null)
+            return Result.Failure(Error.NotFound("Month.NotFound", "Financial month not found."));
+
+        month.Close();
+        _repository.Update(month);
+        await _unitOfWork.CommitAsync(_tenantContext.TenantId, cancellationToken);
+
+        await _notificationService.NotifyDashboardUpdateAsync(cancellationToken);
+
+        return Result.Success();
+    }
+}
+
 internal sealed class RegisterTransactionCommandHandler : IRequestHandler<RegisterTransactionCommand, Result<Guid>>
 {
     private readonly IFinancialTransactionRepository _repository;
@@ -89,7 +154,7 @@ internal sealed class RegisterTransactionCommandHandler : IRequestHandler<Regist
         if (category.Type != request.Type)
             return Result.Failure<Guid>(Error.Validation("Transaction.TypeMismatch", "Transaction type must match category type."));
 
-        var result = FinancialTransaction.Create(_tenantContext.TenantId, _tenantContext.OrganizationId, _tenantContext.BusinessUnitId, request.CategoryId, request.CostCenterId, request.Type, request.Amount, request.Date, request.Description, request.ReferenceId);
+        var result = FinancialTransaction.Create(_tenantContext.TenantId, _tenantContext.OrganizationId, _tenantContext.BusinessUnitId, request.CategoryId, request.CostCenterId, request.FinancialMonthId, request.Type, request.Amount, request.Date, request.Description, request.ReferenceId);
         if (result.IsFailure) return Result.Failure<Guid>(result.Error);
 
         var transaction = result.Value!;

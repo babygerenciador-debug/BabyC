@@ -15,6 +15,13 @@ public interface IFinancialCategoryRepository : IRepository<FinancialCategory>
     Task<IReadOnlyList<FinancialCategoryDto>> GetAllCategoriesAsync(CancellationToken cancellationToken = default);
 }
 
+public interface IFinancialMonthRepository : IRepository<FinancialMonth>
+{
+    Task<FinancialMonth?> GetOpenMonthAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<FinancialMonth>> GetAllOrderedDescAsync(CancellationToken cancellationToken = default);
+    Task<FinancialMonthReportDto?> GetMonthReportAsync(Guid monthId, CancellationToken cancellationToken = default);
+}
+
 public interface IFinancialTransactionRepository : IRepository<FinancialTransaction>
 {
     Task<PagedResult<FinancialTransactionDto>> GetPaginatedTransactionsAsync(int page, int pageSize, TransactionStatus? status, DateTime? startDate, DateTime? endDate, TransactionType? type, CancellationToken cancellationToken = default);

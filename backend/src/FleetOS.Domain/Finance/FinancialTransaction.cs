@@ -14,6 +14,7 @@ public sealed class FinancialTransaction : AggregateRoot
         Guid businessUnitId,
         Guid categoryId,
         Guid? costCenterId,
+        Guid financialMonthId,
         TransactionType type,
         decimal amount,
         DateTime date,
@@ -24,6 +25,7 @@ public sealed class FinancialTransaction : AggregateRoot
     {
         CategoryId = categoryId;
         CostCenterId = costCenterId;
+        FinancialMonthId = financialMonthId;
         Type = type;
         Amount = amount;
         Date = date;
@@ -35,6 +37,7 @@ public sealed class FinancialTransaction : AggregateRoot
 
     public Guid CategoryId { get; private set; }
     public Guid? CostCenterId { get; private set; }
+    public Guid FinancialMonthId { get; private set; }
     public TransactionType Type { get; private set; }
     
     public decimal Amount { get; private set; }
@@ -52,6 +55,7 @@ public sealed class FinancialTransaction : AggregateRoot
         Guid businessUnitId,
         Guid categoryId,
         Guid? costCenterId,
+        Guid financialMonthId,
         TransactionType type,
         decimal amount,
         DateTime date,
@@ -66,7 +70,7 @@ public sealed class FinancialTransaction : AggregateRoot
 
         var transaction = new FinancialTransaction(
             Guid.NewGuid(), tenantId, organizationId, businessUnitId,
-            categoryId, costCenterId, type, amount, date, description.Trim(),
+            categoryId, costCenterId, financialMonthId, type, amount, date, description.Trim(),
             TransactionStatus.Pending, referenceId);
 
         return Result.Success(transaction);

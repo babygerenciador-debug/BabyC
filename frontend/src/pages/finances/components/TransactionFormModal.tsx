@@ -43,6 +43,14 @@ export default function TransactionFormModal({ onClose }: Props) {
     }
   });
 
+  const { data: openMonth } = useQuery({
+    queryKey: ['open-financial-month'],
+    queryFn: async () => {
+      const res = await api.get('/finance/months/open');
+      return res.data;
+    },
+  });
+
   const { register, handleSubmit, watch, formState: { errors } } = useForm<TxFormData>({
     resolver: zodResolver(txSchema),
     defaultValues: {
@@ -61,6 +69,7 @@ export default function TransactionFormModal({ onClose }: Props) {
       const payload: Record<string, unknown> = {
         categoryId: data.categoryId,
         costCenterId: data.costCenterId || null,
+        financialMonthId: openMonth?.id,
         type: data.type,
         amount: data.amount,
         date: new Date(data.date).toISOString(),
@@ -76,11 +85,16 @@ export default function TransactionFormModal({ onClose }: Props) {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['cash-flow-summary'] });
       queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['financial-month-report'] });
       onClose();
     }
   });
 
   const onSubmit = (data: TxFormData) => {
+    if (!openMonth?.id) {
+      alert('Não há mês aberto. Abra um mês financeiro antes de lançar transações.');
+      return;
+    }
     mutation.mutate(data);
   };
 
@@ -93,7 +107,7 @@ export default function TransactionFormModal({ onClose }: Props) {
       footer={
         <div className="modal-footer">
           <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
-          <button type="submit" form={FORM_ID} className="btn-primary" disabled={mutation.isPending}>
+          <button type="submit" form={FORM_ID} className="btn-primary" disabled={mutation.isPending || !openMonth?.id}>
             {mutation.isPending ? <Loader2 className="spinner" size={18} /> : <Save size={18} />}
             <span>{mutation.isPending ? 'Salvando...' : 'Lançar Transação'}</span>
           </button>

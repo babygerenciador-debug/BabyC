@@ -133,6 +133,7 @@ public static class InfrastructureServiceExtensions
         // Finance
         services.AddScoped<ICostCenterRepository, CostCenterRepository>();
         services.AddScoped<IFinancialCategoryRepository, FinancialCategoryRepository>();
+        services.AddScoped<IFinancialMonthRepository, FinancialMonthRepository>();
         services.AddScoped<IFinancialTransactionRepository, FinancialTransactionRepository>();
         
         // Dashboard

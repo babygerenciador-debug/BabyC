@@ -32,6 +32,27 @@ public sealed record FinancialTransactionDto(
     DateTimeOffset CreatedAt,
     DateTimeOffset? UpdatedAt);
 
+public sealed record FinancialMonthDto(
+    Guid Id,
+    int Year,
+    int MonthNumber,
+    string Label,
+    decimal OwnerSalary,
+    string Status,
+    DateTimeOffset OpenedAt,
+    DateTimeOffset? ClosedAt,
+    DateTimeOffset CreatedAt);
+
+public sealed record FinancialMonthReportDto(
+    FinancialMonthDto Month,
+    decimal TotalRevenues,
+    decimal TotalExpenses,
+    decimal NetBalance,
+    decimal OwnerSalary,
+    decimal OwnerTaxAmount,
+    decimal NetOwnerSalary,
+    IReadOnlyList<FinancialTransactionDto> Transactions);
+
 public sealed record CashFlowSummaryDto(
     decimal OwnerSalary,
     decimal OwnerTaxAmount,

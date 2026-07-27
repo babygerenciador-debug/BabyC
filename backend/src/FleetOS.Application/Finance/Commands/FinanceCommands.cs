@@ -11,9 +11,13 @@ public sealed record CreateFinancialCategoryCommand(string Name, TransactionType
 public sealed record UpdateFinancialCategoryCommand(Guid Id, string Name) : IRequest<Result>;
 public sealed record DeleteFinancialCategoryCommand(Guid Id) : IRequest<Result>;
 
+public sealed record OpenFinancialMonthCommand(int Year, int Month, decimal OwnerSalary) : IRequest<Result<Guid>>;
+public sealed record CloseFinancialMonthCommand(Guid Id) : IRequest<Result>;
+
 public sealed record RegisterTransactionCommand(
     Guid CategoryId,
     Guid? CostCenterId,
+    Guid FinancialMonthId,
     TransactionType Type,
     decimal Amount,
     DateTime Date,

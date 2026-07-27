@@ -18,6 +18,10 @@ public sealed record GetTransactionsQuery(
     DateTime? EndDate,
     TransactionType? Type) : IRequest<Result<PagedResult<FinancialTransactionDto>>>;
 
+public sealed record GetFinancialMonthsQuery() : IRequest<Result<IReadOnlyList<FinancialMonthDto>>>;
+public sealed record GetOpenFinancialMonthQuery() : IRequest<Result<FinancialMonthDto?>>;
+public sealed record GetFinancialMonthReportQuery(Guid MonthId) : IRequest<Result<FinancialMonthReportDto>>;
+
 public sealed record GetCashFlowSummaryQuery(
     DateTime? StartDate,
     DateTime? EndDate) : IRequest<Result<CashFlowSummaryDto>>;

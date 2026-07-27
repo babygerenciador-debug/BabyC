@@ -1,6 +1,7 @@
 using FleetOS.Application.Common.Interfaces;
 using FleetOS.Domain.Common.Interfaces;
 using FleetOS.Domain.Core.Tenants;
+using FleetOS.Domain.Finance;
 using FleetOS.Shared.Pagination;
 using FleetOS.Shared.Results;
 using MediatR;
@@ -76,6 +77,66 @@ internal sealed class GetCostCenterByIdQueryHandler : IRequestHandler<GetCostCen
 
         var dto = new CostCenterDto(costCenter.Id, costCenter.Name, costCenter.Description, costCenter.CreatedAt, costCenter.UpdatedAt);
         return Result.Success(dto);
+    }
+}
+
+internal sealed class GetFinancialMonthsQueryHandler : IRequestHandler<GetFinancialMonthsQuery, Result<IReadOnlyList<FinancialMonthDto>>>
+{
+    private readonly IFinancialMonthRepository _repository;
+
+    public GetFinancialMonthsQueryHandler(IFinancialMonthRepository repository)
+    {
+        _repository = repository;
+    }
+
+    public async Task<Result<IReadOnlyList<FinancialMonthDto>>> Handle(GetFinancialMonthsQuery request, CancellationToken cancellationToken)
+    {
+        var months = await _repository.GetAllOrderedDescAsync(cancellationToken);
+        var dtos = months.Select(m => new FinancialMonthDto(
+            m.Id, m.Year, m.MonthNumber, m.Label, m.OwnerSalary,
+            m.Status == MonthStatus.Open ? "open" : "closed",
+            m.OpenedAt, m.ClosedAt, m.CreatedAt)).ToList();
+        return Result.Success<IReadOnlyList<FinancialMonthDto>>(dtos);
+    }
+}
+
+internal sealed class GetOpenFinancialMonthQueryHandler : IRequestHandler<GetOpenFinancialMonthQuery, Result<FinancialMonthDto?>>
+{
+    private readonly IFinancialMonthRepository _repository;
+
+    public GetOpenFinancialMonthQueryHandler(IFinancialMonthRepository repository)
+    {
+        _repository = repository;
+    }
+
+    public async Task<Result<FinancialMonthDto?>> Handle(GetOpenFinancialMonthQuery request, CancellationToken cancellationToken)
+    {
+        var month = await _repository.GetOpenMonthAsync(cancellationToken);
+        if (month is null) return Result.Success<FinancialMonthDto?>(null);
+
+        var dto = new FinancialMonthDto(
+            month.Id, month.Year, month.MonthNumber, month.Label, month.OwnerSalary,
+            "open", month.OpenedAt, month.ClosedAt, month.CreatedAt);
+        return Result.Success<FinancialMonthDto?>(dto);
+    }
+}
+
+internal sealed class GetFinancialMonthReportQueryHandler : IRequestHandler<GetFinancialMonthReportQuery, Result<FinancialMonthReportDto>>
+{
+    private readonly IFinancialMonthRepository _repository;
+
+    public GetFinancialMonthReportQueryHandler(IFinancialMonthRepository repository)
+    {
+        _repository = repository;
+    }
+
+    public async Task<Result<FinancialMonthReportDto>> Handle(GetFinancialMonthReportQuery request, CancellationToken cancellationToken)
+    {
+        var report = await _repository.GetMonthReportAsync(request.MonthId, cancellationToken);
+        if (report is null)
+            return Result.Failure<FinancialMonthReportDto>(Error.NotFound("Month.NotFound", "Financial month not found."));
+
+        return Result.Success(report);
     }
 }
 
