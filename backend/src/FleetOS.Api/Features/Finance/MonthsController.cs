@@ -29,6 +29,9 @@ public sealed class MonthsController : BaseController
         return result.IsSuccess ? NoContent() : BadRequest(result.Error);
     }
 
+    [HttpGet("ping")]
+    public IActionResult Ping() => Ok(new { status = "ok" });
+
     [HttpGet]
     public async Task<IActionResult> GetMonths(CancellationToken cancellationToken)
     {
