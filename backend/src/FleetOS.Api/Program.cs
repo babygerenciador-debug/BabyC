@@ -3,6 +3,7 @@ using FleetOS.Application;
 using FleetOS.Infrastructure;
 using FleetOS.Infrastructure.Hubs;
 using FleetOS.Infrastructure.Persistence;
+using NetEscapades.AspNetCore.SecurityHeaders;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -38,6 +39,24 @@ try
         .AddApplicationServices()
         .AddInfrastructureServices(builder.Configuration);
 
+    // Security headers policies (NetEscapades) — configured in DI for per-endpoint override support
+    builder.Services.AddSecurityHeaderPolicies()
+        .SetDefaultPolicy(policy =>
+        {
+            policy.AddFrameOptionsDeny()                                        // X-Frame-Options: DENY
+                  .AddContentTypeOptionsNoSniff()                               // X-Content-Type-Options: nosniff
+                  .AddStrictTransportSecurityMaxAgeIncludeSubDomains(maxAgeInSeconds: 300) // HSTS: max-age=300
+                  .AddReferrerPolicyStrictOriginWhenCrossOrigin()               // Referrer-Policy
+                  .AddCustomHeader("X-XSS-Protection", "0")                    // XSS Auditor disabled
+                  .AddPermissionsPolicy(ppBuilder =>
+                  {
+                      ppBuilder.AddCamera().Self();                             // camera=(self)
+                      ppBuilder.AddMicrophone().None();                         // microphone=()
+                      ppBuilder.AddGeolocation().Self();                        // geolocation=(self)
+                  });
+            // NOTE: CSP intentionally NOT configured here — deferred to Phase 2
+        });
+
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
@@ -48,6 +67,9 @@ try
         options.EnableDetailedErrors = true;
     });
     var app = builder.Build();
+
+    // Security headers MUST be first middleware to apply to ALL responses (including errors)
+    app.UseSecurityHeaders();
 
     app.UseSerilogRequestLogging(opts =>
     {
@@ -104,3 +126,6 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+// Expose Program type for WebApplicationFactory<Program> in integration tests
+public partial class Program { }
