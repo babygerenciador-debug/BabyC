@@ -10,7 +10,7 @@ Remediate all 24 security findings from the HexStrike AI penetration test and in
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Security Headers** - Backend middleware + Vercel config for HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- [x] **Phase 1: Security Headers** - Backend middleware + Vercel config for HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
 - [ ] **Phase 2: CSP Hardening** - Remove unsafe-inline/unsafe-eval, move inline scripts external, hash-based CSP with Report-Only → enforce pipeline
 - [ ] **Phase 3: Authentication Hardening** - Rate limiting on auth endpoints, JWT expiry validation in route guards, generic error messages
 - [ ] **Phase 4: Input Validation & Data Protection** - File upload validation (magic bytes), CORS lockdown, CNH masking, production bundle cleanup
@@ -29,7 +29,7 @@ Remediate all 24 security findings from the HexStrike AI penetration test and in
   4. HSTS max-age starts at 300 seconds and is verifiable in response headers — low initial value allows safe validation before increasing
 **Plans**: 1
 **Plan list**:
-- [ ] 01-01-PLAN.md — Backend security headers middleware (NetEscapades) + frontend Vercel header configuration
+- [x] 01-01-PLAN.md — Backend security headers middleware (NetEscapades) + frontend Vercel header configuration
 
 ### Phase 2: CSP Hardening
 **Goal**: A strict Content Security Policy eliminates the XSS attack surface by removing unsafe-inline and unsafe-eval from script-src, using hash-based policies for the static Vite SPA — deployed safely through Report-Only mode before enforcement.
@@ -78,7 +78,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Security Headers | 0/TBD | Not started | - |
+| 1. Security Headers | 1/1 | Complete | 2026-08-01 |
 | 2. CSP Hardening | 0/TBD | Not started | - |
 | 3. Authentication Hardening | 0/TBD | Not started | - |
 | 4. Input Validation & Data Protection | 0/TBD | Not started | - |

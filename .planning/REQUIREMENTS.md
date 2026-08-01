@@ -7,10 +7,10 @@
 
 ### Security Headers
 
-- [ ] **HDR-01**: Backend implements security headers middleware (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) using NetEscapades.AspNetCore.SecurityHeaders
-- [ ] **HDR-02**: Frontend sets security headers via vercel.json configuration
-- [ ] **HDR-03**: X-XSS-Protection set to `0` (disabled) on all endpoints — the header is deprecated and introduces vulnerabilities
-- [ ] **HDR-04**: HSTS configured with incremental rollout (start 300s max-age, increase after validation)
+- [x] **HDR-01**: Backend implements security headers middleware (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) using NetEscapades.AspNetCore.SecurityHeaders
+- [x] **HDR-02**: Frontend sets security headers via vercel.json configuration
+- [x] **HDR-03**: X-XSS-Protection set to `0` (disabled) on all endpoints — the header is deprecated and introduces vulnerabilities
+- [x] **HDR-04**: HSTS configured with incremental rollout (start 300s max-age, increase after validation)
 
 ### CSP Hardening
 
@@ -71,10 +71,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HDR-01 | Phase 1 | Pending |
-| HDR-02 | Phase 1 | Pending |
-| HDR-03 | Phase 1 | Pending |
-| HDR-04 | Phase 1 | Pending |
+| HDR-01 | Phase 1 | Complete |
+| HDR-02 | Phase 1 | Complete |
+| HDR-03 | Phase 1 | Complete |
+| HDR-04 | Phase 1 | Complete |
 | CSP-01 | Phase 2 | Pending |
 | CSP-02 | Phase 2 | Pending |
 | CSP-03 | Phase 2 | Pending |
