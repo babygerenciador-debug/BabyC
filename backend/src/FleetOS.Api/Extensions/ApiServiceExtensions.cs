@@ -67,7 +67,9 @@ public static class ApiServiceExtensions
                            "Authorization",
                            "Content-Type",
                            "X-Requested-With",
-                           "X-Correlation-Id"
+                           "X-Correlation-Id",
+                           "Cache-Control",
+                           "x-signalr-user-agent"
                        )
                        .AllowCredentials()
                        .SetPreflightMaxAge(TimeSpan.FromHours(1)));
