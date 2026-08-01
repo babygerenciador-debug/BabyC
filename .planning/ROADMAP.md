@@ -27,7 +27,9 @@ Remediate all 24 security findings from the HexStrike AI penetration test and in
   2. Frontend static assets served by Vercel return the same security header set via vercel.json configuration
   3. X-XSS-Protection header is set to `0` (disabled) on all endpoints — the deprecated `1; mode=block` value is nowhere in the response
   4. HSTS max-age starts at 300 seconds and is verifiable in response headers — low initial value allows safe validation before increasing
-**Plans**: TBD
+**Plans**: 1
+**Plan list**:
+- [ ] 01-01-PLAN.md — Backend security headers middleware (NetEscapades) + frontend Vercel header configuration
 
 ### Phase 2: CSP Hardening
 **Goal**: A strict Content Security Policy eliminates the XSS attack surface by removing unsafe-inline and unsafe-eval from script-src, using hash-based policies for the static Vite SPA — deployed safely through Report-Only mode before enforcement.
