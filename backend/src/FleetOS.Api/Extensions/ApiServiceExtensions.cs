@@ -62,9 +62,15 @@ public static class ApiServiceExtensions
 
             options.AddPolicy("AllowedOrigins", builder =>
                 builder.WithOrigins(allowedOrigins)
-                       .AllowAnyMethod()
-                       .AllowAnyHeader()
-                       .AllowCredentials());
+                       .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                       .WithHeaders(
+                           "Authorization",
+                           "Content-Type",
+                           "X-Requested-With",
+                           "X-Correlation-Id"
+                       )
+                       .AllowCredentials()
+                       .SetPreflightMaxAge(TimeSpan.FromHours(1)));
         });
 
         services.AddRateLimiter(options =>

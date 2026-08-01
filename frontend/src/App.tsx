@@ -13,16 +13,8 @@ import InventoryPage from './pages/inventory/InventoryPage';
 import FinancesPage from './pages/finances/FinancesPage';
 import DriverPortalPage from './pages/driver/DriverPortalPage';
 import { useAuthStore } from './store/useAuthStore';
+import { isTokenExpired } from './utils/jwt';
 import type { ReactNode } from 'react';
-
-function isTokenExpired(token: string): boolean {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.exp * 1000 < Date.now();
-  } catch {
-    return true;
-  }
-}
 
 function AdminRoute({ children }: { children: ReactNode }) {
   const user = useAuthStore((s) => s.user);

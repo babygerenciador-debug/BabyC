@@ -111,6 +111,17 @@ desktop.ini
 # ---- Redis ----
 dump.rdb
 
+# ---- Security Documentation (internal planning) ----
+CRITICAL-ANALYSIS-*.md
+FRONTEND-SECURITY-FIXES-*.md
+PENTEST-FIXES-*.md
+SECURITY-VALIDATION-GUIDE.md
+SECURITY-AUDIT.md
+IMPLEMENTATION_SUMMARY.md
+IMPLEMENTATION_ROADMAP.md
+MODULE_TEMPLATE.md
+UI-REVIEW.md
+
 # ---- Misc ----
 .vscode/settings.json
 *.bak

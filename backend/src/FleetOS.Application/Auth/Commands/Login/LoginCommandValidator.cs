@@ -7,10 +7,12 @@ public sealed class LoginCommandValidator : AbstractValidator<LoginCommand>
     public LoginCommandValidator()
     {
         RuleFor(x => x.Identifier)
-            .NotEmpty().WithMessage("Identifier is required.");
+            .NotEmpty().WithMessage("Identifier is required.")
+            .MaximumLength(256).WithMessage("Identifier must not exceed 256 characters.");
 
         RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("Password is required.");
+            .NotEmpty().WithMessage("Password is required.")
+            .MaximumLength(100).WithMessage("Password must not exceed 100 characters.");
 
         // If identifier looks like a CPF (all digits, length 11), TenantSlug must be provided
         RuleFor(x => x.TenantSlug)

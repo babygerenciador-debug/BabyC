@@ -45,16 +45,69 @@ try
         {
             policy.AddFrameOptionsDeny()                                        // X-Frame-Options: DENY
                   .AddContentTypeOptionsNoSniff()                               // X-Content-Type-Options: nosniff
-                  .AddStrictTransportSecurityMaxAgeIncludeSubDomains(maxAgeInSeconds: 300) // HSTS: max-age=300
+                  .AddStrictTransportSecurityMaxAgeIncludeSubDomains(maxAgeInSeconds: 31536000) // HSTS: 1 year
                   .AddReferrerPolicyStrictOriginWhenCrossOrigin()               // Referrer-Policy
-                  .AddCustomHeader("X-XSS-Protection", "0")                    // XSS Auditor disabled
+                  .AddXssProtectionBlock()                                      // X-XSS-Protection: 1; mode=block (legacy browsers)
+                  .AddContentSecurityPolicy(csp =>
+                  {
+                      // Base URI - only allow same origin
+                      csp.AddBaseUri().Self();
+                      
+                      // Default-src - fallback for other directives
+                      csp.AddDefaultSrc().Self();
+                      
+                      // Script-src - allow self, external scripts (no inline scripts)
+                      // NOTE: unsafe-inline removed - theme initialization moved to /theme-init.js
+                      csp.AddScriptSrc()
+                          .Self()
+                          .From("https://fonts.googleapis.com")
+                          .From("https://fonts.gstatic.com");
+                      
+                      // Style-src - allow self, inline styles, Google Fonts
+                      csp.AddStyleSrc()
+                          .Self()
+                          .UnsafeInline()
+                          .From("https://fonts.googleapis.com")
+                          .From("https://fonts.gstatic.com");
+                      
+                      // Font-src - allow Google Fonts
+                      csp.AddFontSrc()
+                          .Self()
+                          .From("https://fonts.gstatic.com");
+                      
+                      // Img-src - allow self, data URIs, blob URLs
+                      csp.AddImgSrc()
+                          .Self()
+                          .Data()
+                          .Blob();
+                      
+                      // Connect-src - allow self for API calls, WebSocket for SignalR
+                      csp.AddConnectSrc()
+                          .Self()
+                          .From("https://*.onrender.com")                        // Backend API
+                          .From("wss://*.onrender.com");                         // SignalR WebSocket
+                      
+                      // Frame-src - prevent framing (already covered by X-Frame-Options)
+                      csp.AddFrameSrc().None();
+                      
+                      // Object-src - prevent Flash/other plugins
+                      csp.AddObjectSrc().None();
+                      
+                      // Media-src - allow self for uploaded content
+                      csp.AddMediaSrc().Self();
+                      
+                      // Worker-src - allow self for web workers
+                      csp.AddWorkerSrc().Self().Blob();
+                      
+                      // Form-action - only allow self
+                      csp.AddFormAction().Self();
+                  })
                   .AddPermissionsPolicy(ppBuilder =>
                   {
                       ppBuilder.AddCamera().Self();                             // camera=(self)
                       ppBuilder.AddMicrophone().None();                         // microphone=()
                       ppBuilder.AddGeolocation().Self();                        // geolocation=(self)
                   });
-            // NOTE: CSP intentionally NOT configured here — deferred to Phase 2
         });
 
     builder.Services.AddEndpointsApiExplorer();
