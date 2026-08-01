@@ -1,0 +1,220 @@
+# Architecture Patterns — Security Hardening
+
+**Domain:** Web application security for split-hosting deployment (Vercel + Render.com)
+**Researched:** 2026-08-01
+
+## Recommended Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         INTERNET                                 │
+└────────────┬────────────────────────────────────┬───────────────┘
+             │                                    │
+             ▼                                    ▼
+    ┌────────────────┐                  ┌─────────────────┐
+    │   Cloudflare   │ (optional WAF)   │    Vercel CDN   │
+    │   (optional)   │◄─────────────────│   (Edge Network) │
+    └────────┬───────┘                  └────────┬────────┘
+             │                                    │
+             │          ┌─────────────────┐       │
+             └─────────►│   Render.com    │       │
+                        │   (ASP.NET Core)│       │
+                        └─────────────────┘       │
+                                                  │
+                        ┌─────────────────┐       │
+                        │  PostgreSQL 16  │◄──────┘
+                        │  (Render DB)    │
+                        └─────────────────┘
+```
+
+### Two-Layer Security Model
+
+**Layer 1 — Vercel Edge (Static Headers)**
+- Headers set in `vercel.json` apply to all responses at CDN edge
+- Zero latency — headers injected by Vercel's reverse proxy
+- Cannot generate per-request nonces (static hosting)
+- CSP via `<meta>` tag in `index.html` or hash-based `strict-dynamic`
+
+**Layer 2 — ASP.NET Core Middleware (Dynamic Headers)**
+- `UseSecurityHeaders()` middleware wraps every response
+- Generates per-request nonces for CSP (if using nonce-based approach)
+- Rate limiting, CORS, authentication all handled here
+- Full control over header values based on request context
+
+### Component Boundaries
+
+| Component | Responsibility | Communicates With |
+|-----------|---------------|-------------------|
+| **Vercel CDN** | Serve static React bundle, inject static headers | Client browsers, Render API |
+| **Vercel Edge Middleware** (optional) | Per-request CSP nonce generation, header manipulation | Vercel CDN, client browsers |
+| **ASP.NET Core API** | Business logic, authentication, rate limiting, dynamic security headers | Vercel CDN, PostgreSQL |
+| **NetEscapades middleware** | Security header generation (CSP, HSTS, COOP/COEP/CORP) | ASP.NET Core pipeline |
+| **ASP.NET Core Rate Limiter** | Brute-force prevention on auth endpoints | ASP.NET Core pipeline |
+| **PostgreSQL 16** | Data persistence | ASP.NET Core API |
+
+### Data Flow
+
+1. **Client → Vercel:** Browser requests React SPA
+2. **Vercel CDN:** Serves `index.html` with static headers (from `vercel.json`)
+3. **Vercel CDN:** Injects CSP via `<meta>` tag (hash-based) or Edge Middleware (nonce-based)
+4. **Client:** Loads React bundle, makes API calls to `api.yourdomain.com`
+5. **Client → Render:** API request hits ASP.NET Core
+6. **ASP.NET Core:** `UseSecurityHeaders()` adds dynamic headers (CSP nonce, HSTS, etc.)
+7. **ASP.NET Core:** `UseRateLimiter()` checks rate limit, `UseCors()` validates origin
+8. **ASP.NET Core → PostgreSQL:** Query database, return response
+9. **Response → Client:** All security headers present, rate limit enforced, CORS validated
+
+## Patterns to Follow
+
+### Pattern 1: Middleware Order in ASP.NET Core
+
+**What:** Security middleware must be ordered correctly in the pipeline
+**When:** Always — middleware order affects security, performance, and correctness
+**Example:**
+
+```csharp
+var app = builder.Build();
+
+// 1. Security headers FIRST (wraps all responses)
+app.UseSecurityHeaders();
+
+// 2. Exception handling (catches errors from later middleware)
+app.UseExceptionHandler("/Error");
+app.UseHsts();
+
+// 3. HTTPS redirection
+app.UseHttpsRedirection();
+
+// 4. Static files (short-circuits pipeline)
+app.UseStaticFiles();
+
+// 5. Routing (must come before rate limiting and auth)
+app.UseRouting();
+
+// 6. Rate limiting (after routing, before auth)
+app.UseRateLimiter();
+
+// 7. CORS (after routing, before auth)
+app.UseCors("AllowFrontend");
+
+// 8. Authentication
+app.UseAuthentication();
+
+// 9. Authorization
+app.UseAuthorization();
+
+// 10. Endpoints
+app.MapControllers();
+```
+
+**Why this order:**
+- `UseSecurityHeaders()` first ensures ALL responses get headers, including 404s and errors
+- `UseExceptionHandler()` catches exceptions from later middleware
+- `UseRouting()` before rate limiting so endpoint-specific policies work
+- `UseCors()` before auth so preflight requests don't require authentication
+- `UseAuthentication()` before `UseAuthorization()` — must identify user before checking permissions
+
+### Pattern 2: Hash-Based CSP for Static SPAs
+
+**What:** Use content hashes instead of nonces for CSP on static hosting
+**When:** Deploying React/Vue/Svelte SPA to Vercel, Netlify, or similar static hosting
+**Example:**
+
+```html
+<!-- index.html (generated by Vite with vite-plugin-csp-guard) -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'sha256-abc123...' 'strict-dynamic';
+    style-src 'self' 'unsafe-inline';
+    object-src 'none';
+    base-uri 'self';
+  ">
+  <script src="/assets/index.js" integrity="sha256-abc123..."></script>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
+```
+
+**Why:** Static hosting cannot generate per-request nonces. Hashes are stable per build. `strict-dynamic` propagates trust from the entry script to all dynamically loaded scripts.
+
+### Pattern 3: Partitioned Rate Limiting
+
+**What:** Use different rate limiters for different endpoint types
+**When:** Building APIs with mixed access patterns (auth, general API, admin)
+**Example:**
+
+```csharp
+builder.Services.AddRateLimiter(options =>
+{
+    // Auth endpoints: Sliding window by IP
+    options.AddPolicy("auth", ctx =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
+            }));
+
+    // General API: Token bucket by user
+    options.AddPolicy("api", ctx =>
+        RateLimitPartition.GetTokenBucketLimiter(
+            ctx.User.Identity?.Name ?? "anonymous",
+            _ => new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = 100,
+                TokensPerPeriod = 10,
+                ReplenishmentPeriod = TimeSpan.FromSeconds(5),
+            }));
+});
+```
+
+**Why:** Auth endpoints need strict per-IP limits (brute-force prevention). General API needs per-user limits (fair usage). Different algorithms for different threat models.
+
+## Anti-Patterns to Avoid
+
+### Anti-Pattern 1: Placing Security Headers After Static Files
+
+**What:** Calling `UseSecurityHeaders()` after `UseStaticFiles()`
+**Why bad:** Static file responses short-circuit the pipeline. If `UseSecurityHeaders()` comes after `UseStaticFiles()`, static files won't get security headers.
+**Instead:** Always call `UseSecurityHeaders()` FIRST in the pipeline, before any middleware that might short-circuit.
+
+### Anti-Pattern 2: Using `unsafe-inline` in `script-src`
+
+**What:** Setting CSP `script-src 'self' 'unsafe-inline'`
+**Why bad:** `'unsafe-inline'` defeats CSP's primary purpose (XSS prevention). Inline scripts are the most common XSS vector.
+**Instead:** Use hash-based or nonce-based CSP. For React SPAs, hash-based with `strict-dynamic` is simplest.
+
+### Anti-Pattern 3: Rate Limiting Before Routing
+
+**What:** Calling `UseRateLimiter()` before `UseRouting()`
+**Why bad:** Endpoint-specific rate limiting policies (via `[EnableRateLimiting]` attribute) require routing to be set up first. Global limiters work before routing, but endpoint-specific policies fail silently.
+**Instead:** Always call `UseRouting()` before `UseRateLimiter()`.
+
+### Anti-Pattern 4: Wildcard CORS with Credentials
+
+**What:** Setting `Access-Control-Allow-Origin: *` with `Access-Control-Allow-Credentials: true`
+**Why bad:** Browsers reject this combination. It's a security footgun — if a browser doesn't reject it, credentials are exposed to any origin.
+**Instead:** Use explicit origin lists: `policy.WithOrigins("https://app.vercel.app")`.
+
+## Scalability Considerations
+
+| Concern | At 100 users | At 10K users | At 1M users |
+|---------|--------------|--------------|-------------|
+| **Rate limiting** | In-memory (ASP.NET Core built-in) | In-memory per instance, or Redis-backed if multiple instances | Redis-backed, distributed rate limiting with consistent hashing |
+| **CSP** | Hash-based (static per build) | Hash-based or nonce-based with Edge Middleware | Nonce-based with Edge Middleware + CDN caching of nonces |
+| **CORS** | Simple origin list | Origin list + preflight caching (`preflightMaxAge: 1h`) | Origin list + CDN-level CORS handling |
+| **Security headers** | Vercel static headers + ASP.NET Core middleware | Same, but consider Cloudflare WAF | Cloudflare WAF + custom edge rules |
+
+## Sources
+
+- [ASP.NET Core Middleware Pipeline](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/?view=aspnetcore-10.0) — 2026-06-09
+- [ASP.NET Core Rate Limiting](https://learn.microsoft.com/en-us/aspnet/core/performance/rate-limit?view=aspnetcore-10.0) — 2026-07-22
+- [NetEscapades.AspNetCore.SecurityHeaders](https://www.nuget.org/packages/NetEscapades.AspNetCore.SecurityHeaders) — v1.3.1
+- [MDN CSP Guide](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP) — 2026-03-22
