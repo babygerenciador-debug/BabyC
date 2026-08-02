@@ -42,6 +42,22 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info'],
+      },
+      format: {
+        comments: false,
+      },
+      mangle: {
+        properties: {
+          regex: /^_/,
+        },
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
