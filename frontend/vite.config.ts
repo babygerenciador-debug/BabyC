@@ -49,7 +49,7 @@ export default defineConfig({
         drop_debugger: true,
         pure_funcs: ['console.log', 'console.info'],
       },
-      output: {
+      format: {
         comments: false,
       },
     },
