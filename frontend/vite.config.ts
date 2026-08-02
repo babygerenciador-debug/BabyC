@@ -49,13 +49,8 @@ export default defineConfig({
         drop_debugger: true,
         pure_funcs: ['console.log', 'console.info'],
       },
-      format: {
+      output: {
         comments: false,
-      },
-      mangle: {
-        properties: {
-          regex: /^_/,
-        },
       },
     },
     rollupOptions: {
